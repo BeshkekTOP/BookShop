@@ -1,4 +1,4 @@
-/* Light modern UI */
+/* Light modern UI with responsive design */
 :root{
 	--bg:#f7f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#2563eb;--border:#e5e7eb;
 	--radius:12px;--shadow:0 4px 24px rgba(15,23,42,.06);
@@ -6,7 +6,30 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body.light{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+
+/* Responsive container - брейкпоинты */
 .container{max-width:1100px;margin:0 auto;padding:16px}
+
+/* Мобильные устройства (до 640px) */
+@media (max-width: 640px) {
+	.container{padding:12px;max-width:100%}
+	.nav{flex-direction:column;gap:8px}
+	.nav ul{flex-direction:column;gap:4px}
+	.grid{grid-template-columns:1fr;gap:12px}
+	.card{padding:12px}
+}
+
+/* Планшеты (641px - 1024px) */
+@media (min-width: 641px) and (max-width: 1024px) {
+	.container{max-width:900px;padding:14px}
+	.grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+}
+
+/* Десктопы (1025px+) */
+@media (min-width: 1025px) {
+	.container{max-width:1100px;padding:16px}
+	.grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+}
 .header{background:#ffffff;border-bottom:1px solid var(--border)}
 .nav{display:flex;justify-content:space-between;align-items:center}
 .nav ul{display:flex;gap:14px;margin:0;padding:0;list-style:none}
