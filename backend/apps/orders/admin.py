@@ -20,9 +20,26 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "status", "total_amount", "created_at")
-    list_filter = ("status",)
+    list_display = ("id", "user", "status", "total_amount", "shipping_city", "created_at")
+    list_filter = ("status", "created_at", "shipping_city")
+    search_fields = ("user__username", "user__email", "shipping_address", "shipping_city")
     inlines = [OrderItemInline]
+    readonly_fields = ("created_at", "updated_at")
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("user", "status", "total_amount")
+        }),
+        ("Адрес доставки", {
+            "fields": ("shipping_address", "shipping_city", "shipping_postal_code")
+        }),
+        ("Дополнительная информация", {
+            "fields": ("notes",)
+        }),
+        ("Временные метки", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
 
 
 

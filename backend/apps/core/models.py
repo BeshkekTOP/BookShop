@@ -1,75 +1,45 @@
 from django.db import models
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
+import json
 
 
 class AuditLog(models.Model):
-    action = models.CharField(max_length=100)
-    actor = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL)
-    path = models.CharField(max_length=255)
-    method = models.CharField(max_length=10)
+    """Система аудита для отслеживания всех изменений"""
+    ACTION_CHOICES = [
+        ('created', 'Создано'),
+        ('updated', 'Обновлено'),
+        ('deleted', 'Удалено'),
+        ('viewed', 'Просмотрено'),
+    ]
+    
+    action = models.CharField(max_length=100, choices=ACTION_CHOICES)
+    actor = models.ForeignKey('auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='audit_logs')
+    content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
+    object_id = models.PositiveIntegerField(null=True, blank=True)
+    content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # Данные до изменения
+    old_data = models.JSONField(null=True, blank=True)
+    # Данные после изменения
+    new_data = models.JSONField(null=True, blank=True)
+    
+    path = models.CharField(max_length=255, blank=True)
+    method = models.CharField(max_length=10, blank=True)
     ip_address = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.TextField(blank=True)
-    details = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['content_type', 'object_id']),
+            models.Index(fields=['actor', 'created_at']),
+            models.Index(fields=['action', 'created_at']),
+        ]
 
     def __str__(self) -> str:
-        return f"{self.created_at} {self.action} {self.path}"
-
-
-class SiteSettings(models.Model):
-    """Модель для настроек сайта"""
-    key = models.CharField(max_length=100, unique=True)
-    value = models.TextField()
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['key']
-
-    def __str__(self) -> str:
-        return f"{self.key}: {self.value}"
-
-
-class Newsletter(models.Model):
-    """Модель для подписки на рассылку"""
-    email = models.EmailField(unique=True)
-    is_active = models.BooleanField(default=True)
-    subscribed_at = models.DateTimeField(auto_now_add=True)
-    unsubscribed_at = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        ordering = ['-subscribed_at']
-
-    def __str__(self) -> str:
-        return self.email
-
-
-class ContactMessage(models.Model):
-    """Модель для сообщений обратной связи"""
-    STATUS_CHOICES = (
-        ('new', 'New'),
-        ('in_progress', 'In Progress'),
-        ('resolved', 'Resolved'),
-        ('closed', 'Closed'),
-    )
-
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    subject = models.CharField(max_length=200)
-    message = models.TextField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self) -> str:
-        return f"{self.subject} from {self.name}"
+        return f"{self.created_at} - {self.get_action_display()} by {self.actor or 'Unknown'}"
 
 
 

@@ -4,12 +4,21 @@ from .models import Review
 
 class ReviewSerializer(serializers.ModelSerializer):
     user_email = serializers.EmailField(source='user.email', read_only=True)
+    user_name = serializers.CharField(source='user.username', read_only=True)
     book_title = serializers.CharField(source='book.title', read_only=True)
 
     class Meta:
         model = Review
-        fields = ("id", "user", "user_email", "book", "book_title", "rating", "text", "is_moderated", "created_at")
-        read_only_fields = ("user", "is_moderated")
+        fields = (
+            "id", "user", "user_email", "user_name", "book", "book_title", 
+            "rating", "text", "is_moderated", "created_at"
+        )
+        read_only_fields = ("user", "is_moderated", "created_at")
+
+    def validate_rating(self, value):
+        if value < 1 or value > 5:
+            raise serializers.ValidationError("Рейтинг должен быть от 1 до 5")
+        return value
 
 
 

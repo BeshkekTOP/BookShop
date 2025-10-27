@@ -6,8 +6,9 @@ router = DefaultRouter()
 router.register(r'orders', OrderViewSet, basename='order')
 
 urlpatterns = [
-    path('cart/', CartView.as_view(), name='cart'),
+    path('cart/', CartView.as_view(), name='api-cart'),
 ] + router.urls
+
 
 
 

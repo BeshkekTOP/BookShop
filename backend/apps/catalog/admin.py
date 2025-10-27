@@ -22,10 +22,29 @@ class BookAuthorsInline(admin.TabularInline):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ("title", "isbn", "category", "price", "rating")
-    search_fields = ("title", "isbn")
-    list_filter = ("category",)
+    list_display = ("title", "isbn", "category", "price", "rating", "is_active", "created_at")
+    search_fields = ("title", "isbn", "description")
+    list_filter = ("category", "is_active", "created_at", "publication_date")
     inlines = [BookAuthorsInline]
+    readonly_fields = ("created_at", "updated_at", "average_rating")
+    fieldsets = (
+        ("Основная информация", {
+            "fields": ("title", "isbn", "description", "category")
+        }),
+        ("Цена и рейтинг", {
+            "fields": ("price", "rating", "average_rating")
+        }),
+        ("Дополнительная информация", {
+            "fields": ("pages", "publication_date", "cover_image")
+        }),
+        ("Статус", {
+            "fields": ("is_active",)
+        }),
+        ("Временные метки", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
 
 
 @admin.register(Inventory)

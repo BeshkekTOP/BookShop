@@ -21,23 +21,28 @@ class CartItem(models.Model):
 
 class Order(models.Model):
     STATUS_CHOICES = (
-        ("pending", "Pending"),
-        ("processing", "Processing"),
-        ("shipped", "Shipped"),
-        ("delivered", "Delivered"),
-        ("cancelled", "Cancelled"),
-        ("refunded", "Refunded"),
+        ("processing", "Обрабатывается"),
+        ("shipped", "Отправлен"),
+        ("delivered", "Доставлен"),
+        ("cancelled", "Отменен"),
     )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='orders')
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="pending")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="processing")
     total_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    shipping_address = models.TextField()
-    shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    shipping_address = models.TextField(default="")
+    shipping_city = models.CharField(max_length=100, default="")
+    shipping_postal_code = models.CharField(max_length=20, default="")
     notes = models.TextField(blank=True)
-    tracking_number = models.CharField(max_length=100, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['status', 'created_at']),
+        ]
 
     def __str__(self) -> str:
         return f"Order #{self.pk} ({self.status})"

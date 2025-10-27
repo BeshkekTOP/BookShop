@@ -34,6 +34,7 @@ class BookSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     authors = serializers.SerializerMethodField()
     inventory = InventorySerializer(read_only=True)
+    average_rating = serializers.ReadOnlyField()
 
     class Meta:
         model = Book
@@ -45,7 +46,13 @@ class BookSerializer(serializers.ModelSerializer):
             "category",
             "price",
             "rating",
+            "average_rating",
+            "pages",
+            "publication_date",
+            "cover_image",
+            "is_active",
             "created_at",
+            "updated_at",
             "authors",
             "inventory",
         )

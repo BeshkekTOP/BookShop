@@ -1,12 +1,16 @@
-from datetime import datetime
-from django.db.models import Sum, F
+from datetime import datetime, timedelta
+from django.db.models import Sum, F, Count, Avg
 from django.http import HttpResponse
 from django.utils.dateparse import parse_datetime
-from rest_framework import permissions, views
+from rest_framework import permissions, views, viewsets
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
 import csv
 
 from backend.apps.orders.models import OrderItem
+from .models import PageView, BookView, SearchQuery, PurchaseEvent
+from .serializers import PageViewSerializer, BookViewSerializer, SearchQuerySerializer, PurchaseEventSerializer
 
 
 class SalesStatsView(views.APIView):
@@ -49,3 +53,92 @@ class TopBooksView(views.APIView):
             .order_by('-total_qty')[:limit]
         )
         return Response(list(qs))
+
+
+class PageViewViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = PageView.objects.all()
+    serializer_class = PageViewSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['user', 'path']
+    search_fields = ['path', 'user_agent']
+    ordering_fields = ['timestamp']
+    ordering = ['-timestamp']
+
+
+class BookViewViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = BookView.objects.select_related('book').all()
+    serializer_class = BookViewSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['user', 'book']
+    search_fields = ['book__title']
+    ordering_fields = ['timestamp']
+    ordering = ['-timestamp']
+
+
+class SearchQueryViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = SearchQuery.objects.all()
+    serializer_class = SearchQuerySerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['user']
+    search_fields = ['query']
+    ordering_fields = ['timestamp']
+    ordering = ['-timestamp']
+
+
+class PurchaseEventViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = (permissions.IsAdminUser,)
+    queryset = PurchaseEvent.objects.select_related('user', 'order').all()
+    serializer_class = PurchaseEventSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ['user']
+    ordering_fields = ['timestamp', 'total_amount']
+    ordering = ['-timestamp']
+
+
+class DashboardStatsView(views.APIView):
+    permission_classes = (permissions.IsAdminUser,)
+
+    def get(self, request):
+        # Статистика за последние 30 дней
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        
+        # Общая статистика продаж
+        sales_stats = OrderItem.objects.filter(
+            order__created_at__gte=start_date
+        ).aggregate(
+            total_revenue=Sum(F('price') * F('quantity')),
+            total_orders=Count('order', distinct=True),
+            total_items=Sum('quantity')
+        )
+        
+        # Статистика просмотров
+        page_views = PageView.objects.filter(timestamp__gte=start_date).count()
+        book_views = BookView.objects.filter(timestamp__gte=start_date).count()
+        
+        # Популярные поисковые запросы
+        popular_searches = SearchQuery.objects.filter(
+            timestamp__gte=start_date
+        ).values('query').annotate(
+            count=Count('id')
+        ).order_by('-count')[:10]
+        
+        # Топ книги по просмотрам
+        top_books_views = BookView.objects.filter(
+            timestamp__gte=start_date
+        ).values('book__title').annotate(
+            views=Count('id')
+        ).order_by('-views')[:10]
+        
+        return Response({
+            'sales': sales_stats,
+            'views': {
+                'page_views': page_views,
+                'book_views': book_views
+            },
+            'popular_searches': list(popular_searches),
+            'top_books_views': list(top_books_views)
+        })

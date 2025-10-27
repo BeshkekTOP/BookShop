@@ -1,4 +1,5 @@
 version: "3.9"
+
 services:
   db:
     image: postgres:15-alpine
@@ -16,29 +17,103 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - bookstore_network
 
   redis:
     image: redis:7-alpine
     container_name: bookstore_redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - bookstore_network
 
   web:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: bookstore_web
-    command: bash -lc "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    env_file: .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.prod
+      - POSTGRES_DB=${POSTGRES_DB:-bookstore}
+      - POSTGRES_USER=${POSTGRES_USER:-bookstore}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bookstore}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key}
+      - DJANGO_DEBUG=0
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
     volumes:
-      - ./:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+      - logs_volume:/app/logs
     ports:
       - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    networks:
+      - bookstore_network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: bookstore_nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - bookstore_network
+    restart: unless-stopped
+
+  celery:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: bookstore_celery
+    command: /app/docker-entrypoint-celery.sh
+    environment:
+      - DJANGO_SETTINGS_MODULE=backend.settings.prod
+      - POSTGRES_DB=${POSTGRES_DB:-bookstore}
+      - POSTGRES_USER=${POSTGRES_USER:-bookstore}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-bookstore}
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - DJANGO_SECRET_KEY=${DJANGO_SECRET_KEY:-dev-secret-key}
+    volumes:
+      - logs_volume:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - bookstore_network
+    restart: unless-stopped
 
 volumes:
   db_data:
+  static_volume:
+  media_volume:
+  logs_volume:
+
+networks:
+  bookstore_network:
+    driver: bridge
 
 
