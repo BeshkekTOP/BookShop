@@ -1,0 +1,32 @@
+{% extends 'web/base.html' %}
+{% block title %}Админ — Авторы{% endblock %}
+{% block content %}
+<h1>Авторы</h1>
+<div class="grid">
+	<article class="card">
+		<h3 style="margin-top:0">Добавить автора</h3>
+		<form method="post">
+			{% csrf_token %}
+			<input name="first_name" placeholder="Имя" />
+			<input name="last_name" placeholder="Фамилия" style="margin-top:8px" />
+			<button class="btn small" type="submit" style="margin-top:8px">Сохранить</button>
+		</form>
+	</article>
+	<article class="card" style="grid-column: span 2">
+		<h3 style="margin-top:0">Список авторов</h3>
+		<table>
+			<thead><tr><th>Имя</th><th>Фамилия</th></tr></thead>
+			<tbody>
+				{% for a in authors %}
+				<tr><td>{{ a.first_name }}</td><td>{{ a.last_name }}</td></tr>
+				{% empty %}
+				<tr><td colspan="2">Нет авторов</td></tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</article>
+</div>
+{% endblock %}
+
+
+

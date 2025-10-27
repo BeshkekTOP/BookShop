@@ -1,0 +1,248 @@
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.shortcuts import get_object_or_404, redirect, render
+from django.db import transaction
+from django.db.models import Q
+from django.views.decorators.http import require_http_methods
+
+from backend.apps.catalog.models import Book, Category, Author, Inventory, BookAuthors
+from backend.apps.orders.models import Cart, CartItem, Order, OrderItem
+from backend.apps.users.models import Profile
+from django import forms
+from decimal import Decimal
+
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ["phone", "address"]
+
+
+class BookForm(forms.ModelForm):
+    author_ids = forms.ModelMultipleChoiceField(queryset=Author.objects.all(), required=False)
+
+    class Meta:
+        model = Book
+        fields = ["title", "isbn", "description", "category", "price"]
+
+
+def home(request):
+    latest_books = Book.objects.order_by('-created_at')[:8]
+    return render(request, 'web/home.html', {"latest_books": latest_books})
+
+
+def catalog_list(request):
+    q = request.GET.get('q', '')
+    qs = Book.objects.all()
+    if q:
+        qs = qs.filter(Q(title__icontains=q) | Q(isbn__icontains=q))
+    return render(request, 'web/catalog.html', {"books": qs, "q": q})
+
+
+def book_detail(request, pk: int):
+    book = get_object_or_404(Book, pk=pk)
+    return render(request, 'web/book_detail.html', {"book": book})
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def cart_view(request):
+    cart, _ = Cart.objects.get_or_create(user=request.user)
+    if request.method == "POST":
+        action = request.POST.get("action", "add")
+        book_id = request.POST.get("book")
+        qty = int(request.POST.get("quantity", "1") or 1)
+        if action == "add" and book_id:
+            item, created = CartItem.objects.get_or_create(cart=cart, book_id=book_id, defaults={"quantity": qty})
+            if not created:
+                item.quantity = item.quantity + qty
+                item.save()
+            messages.success(request, "Товар добавлен в корзину")
+        elif action in ("inc", "dec") and book_id:
+            try:
+                item = CartItem.objects.get(cart=cart, book_id=book_id)
+                if action == "inc":
+                    item.quantity += 1
+                    item.save()
+                else:
+                    if item.quantity > 1:
+                        item.quantity -= 1
+                        item.save()
+                    else:
+                        item.delete()
+                messages.success(request, "Корзина обновлена")
+            except CartItem.DoesNotExist:
+                pass
+        elif action == "remove" and book_id:
+            CartItem.objects.filter(cart=cart, book_id=book_id).delete()
+            messages.success(request, "Товар удалён из корзины")
+        return redirect('cart')
+
+    items = cart.items.select_related('book').all()
+    total = sum((it.book.price * it.quantity for it in items), start=Decimal('0'))
+    return render(request, 'web/cart.html', {"cart": cart, "items": items, "total": total})
+
+
+@login_required
+@transaction.atomic
+def checkout_view(request):
+    cart = Cart.objects.filter(user=request.user).prefetch_related("items__book").first()
+    if not cart or cart.items.count() == 0:
+        messages.error(request, "Корзина пуста")
+        return redirect('cart')
+
+    # Проверка наличия
+    for item in cart.items.select_related('book').all():
+        inv = Inventory.objects.select_for_update().get(book=item.book)
+        if inv.stock - inv.reserved < item.quantity:
+            messages.error(request, f"Недостаточно на складе: {item.book.title}")
+            return redirect('cart')
+
+    # Создание заказа
+    order = Order.objects.create(user=request.user, status="processing", total_amount=Decimal('0'))
+    total = Decimal('0')
+    for item in cart.items.select_related('book').all():
+        price = item.book.price
+        OrderItem.objects.create(order=order, book=item.book, price=price, quantity=item.quantity)
+        total += price * item.quantity
+        inv = Inventory.objects.select_for_update().get(book=item.book)
+        inv.stock = max(0, inv.stock - item.quantity)
+        inv.save()
+
+    order.total_amount = total
+    order.save()
+    # Очистка корзины
+    cart.items.all().delete()
+    return render(request, 'web/checkout_success.html', {"order": order})
+
+
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('catalog')
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
+            return redirect('catalog')
+    else:
+        form = AuthenticationForm(request)
+    return render(request, 'web/login.html', {"form": form})
+
+
+def register_view(request):
+    if request.user.is_authenticated:
+        return redirect('catalog')
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=user.username, password=raw_password)
+            if user:
+                login(request, user)
+                return redirect('catalog')
+    else:
+        form = UserCreationForm()
+    return render(request, 'web/register.html', {"form": form})
+
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')
+
+
+@login_required
+def profile_view(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Профиль обновлён")
+            return redirect('profile')
+    else:
+        form = ProfileForm(instance=profile)
+    return render(request, 'web/profile.html', {"form": form})
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["GET", "POST"])
+def admin_books(request):
+    if request.method == 'POST':
+        form = BookForm(request.POST)
+        if form.is_valid():
+            book = form.save()
+            auths = form.cleaned_data.get('author_ids')
+            if auths is not None:
+                from backend.apps.catalog.models import BookAuthors
+                BookAuthors.objects.filter(book=book).delete()
+                for a in auths:
+                    BookAuthors.objects.create(book=book, author=a)
+            messages.success(request, 'Книга добавлена')
+            return redirect('admin-books')
+    else:
+        form = BookForm()
+    books = Book.objects.select_related('category').all().order_by('title')
+    return render(request, 'web/admin_books.html', {"form": form, "books": books})
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["GET", "POST"])
+def admin_book_edit(request, pk: int):
+    book = get_object_or_404(Book, pk=pk)
+    if request.method == 'POST':
+        form = BookForm(request.POST, instance=book)
+        if form.is_valid():
+            book = form.save()
+            auths = form.cleaned_data.get('author_ids')
+            if auths is not None:
+                from backend.apps.catalog.models import BookAuthors
+                BookAuthors.objects.filter(book=book).delete()
+                for a in auths:
+                    BookAuthors.objects.create(book=book, author=a)
+            messages.success(request, 'Книга обновлена')
+            return redirect('admin-books')
+    else:
+        form = BookForm(instance=book)
+    return render(request, 'web/admin_book_edit.html', {"form": form, "book": book})
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["POST"]) 
+def admin_book_delete(request, pk: int):
+    book = get_object_or_404(Book, pk=pk)
+    book.delete()
+    messages.success(request, 'Книга удалена')
+    return redirect('admin-books')
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["GET", "POST"])
+def admin_authors(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name','').strip()
+        last_name = request.POST.get('last_name','').strip()
+        if first_name and last_name:
+            Author.objects.get_or_create(first_name=first_name, last_name=last_name)
+            messages.success(request, 'Автор добавлен')
+            return redirect('admin-authors')
+    authors = Author.objects.all().order_by('last_name','first_name')
+    return render(request, 'web/admin_authors.html', {"authors": authors})
+
+
+@user_passes_test(lambda u: u.is_staff)
+@require_http_methods(["GET", "POST"])
+def admin_categories(request):
+    if request.method == 'POST':
+        name = request.POST.get('name','').strip()
+        slug = request.POST.get('slug','').strip()
+        if name and slug:
+            Category.objects.get_or_create(name=name, slug=slug)
+            messages.success(request, 'Категория добавлена')
+            return redirect('admin-categories')
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'web/admin_categories.html', {"categories": categories})

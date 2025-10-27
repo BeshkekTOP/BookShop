@@ -1,0 +1,19 @@
+{% extends 'web/base.html' %}
+{% block title %}Главная — Книжный магазин{% endblock %}
+{% block content %}
+<h1>Новые поступления</h1>
+<div class="grid">
+	{% for b in latest_books %}
+	<article>
+		<header><a href="/books/{{ b.id }}/">{{ b.title }}</a></header>
+		<p>{{ b.category.name }} · {{ b.price }} ₽</p>
+	</article>
+	{% empty %}
+	<p>Нет книг</p>
+	{% endfor %}
+</div>
+{% endblock %}
+
+
+
+

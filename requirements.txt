@@ -1,0 +1,30 @@
+Django==4.2.14
+psycopg2-binary==2.9.9
+Pillow==10.4.0
+
+# DRF + ecosystem
+djangorestframework==3.15.2
+PyJWT==2.9.0
+djangorestframework-simplejwt==5.3.1
+django-cors-headers==4.4.0
+django-filter==24.3
+drf-yasg==1.21.7
+
+# Async / tasks / cache
+redis==5.0.7
+celery==5.4.0
+channels==4.1.0
+channels-redis==4.2.0
+
+# Dev
+ipython==8.27.0
+pytest==8.3.2
+pytest-django==4.9.0
+coverage==7.6.1
+
+# Lint
+flake8==7.1.1
+isort==5.13.2
+black==24.8.0
+
+

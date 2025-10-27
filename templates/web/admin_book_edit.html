@@ -1,0 +1,16 @@
+{% extends 'web/base.html' %}
+{% block title %}Редактирование — {{ book.title }}{% endblock %}
+{% block content %}
+<article class="center-card">
+	<h2 style="margin-top:0">Редактировать книгу</h2>
+	<form method="post">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<button class="btn small" type="submit">Сохранить</button>
+		<a class="btn btn-ghost small" href="/admin/books/">Отмена</a>
+	</form>
+</article>
+{% endblock %}
+
+
+

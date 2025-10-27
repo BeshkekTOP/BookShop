@@ -1,0 +1,32 @@
+{% extends 'web/base.html' %}
+{% block title %}Админ — Категории{% endblock %}
+{% block content %}
+<h1>Категории</h1>
+<div class="grid">
+	<article class="card">
+		<h3 style="margin-top:0">Добавить категорию</h3>
+		<form method="post">
+			{% csrf_token %}
+			<input name="name" placeholder="Название" />
+			<input name="slug" placeholder="Слаг" style="margin-top:8px" />
+			<button class="btn small" type="submit" style="margin-top:8px">Сохранить</button>
+		</form>
+	</article>
+	<article class="card" style="grid-column: span 2">
+		<h3 style="margin-top:0">Список категорий</h3>
+		<table>
+			<thead><tr><th>Название</th><th>Слаг</th></tr></thead>
+			<tbody>
+				{% for c in categories %}
+				<tr><td>{{ c.name }}</td><td>{{ c.slug }}</td></tr>
+				{% empty %}
+				<tr><td colspan="2">Нет категорий</td></tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</article>
+</div>
+{% endblock %}
+
+
+

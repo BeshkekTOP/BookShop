@@ -1,0 +1,21 @@
+{% extends 'web/base.html' %}
+{% block title %}Каталог — Книжный магазин{% endblock %}
+{% block content %}
+<h1>Каталог</h1>
+<form method="get" class="catalog-search" style="margin-bottom:16px">
+	<input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию или ISBN" />
+	<button type="submit" class="btn small">Искать</button>
+</form>
+<div class="grid">
+	{% for b in books %}
+	<article class="card">
+		<header><a href="/books/{{ b.id }}/"><strong>{{ b.title }}</strong></a></header>
+		<p style="margin:.5rem 0;color:var(--muted)">{{ b.category.name }}</p>
+		<p style="margin:.5rem 0"><strong>{{ b.price }} ₽</strong></p>
+		<p><a href="/books/{{ b.id }}/" class="btn small">Подробнее</a></p>
+	</article>
+	{% empty %}
+	<p>Ничего не найдено</p>
+	{% endfor %}
+</div>
+{% endblock %}

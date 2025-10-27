@@ -1,0 +1,21 @@
+[
+	{"model":"catalog.category","pk":1,"fields":{"name":"Фантастика","slug":"fantasy"}},
+	{"model":"catalog.category","pk":2,"fields":{"name":"Бизнес","slug":"business"}},
+	{"model":"catalog.category","pk":3,"fields":{"name":"Научпоп","slug":"science"}},
+	{"model":"catalog.author","pk":1,"fields":{"first_name":"Исаак","last_name":"Азимов"}},
+	{"model":"catalog.author","pk":2,"fields":{"first_name":"Питер","last_name":"Тиль"}},
+	{"model":"catalog.author","pk":3,"fields":{"first_name":"Карл","last_name":"Саган"}},
+	{"model":"catalog.author","pk":4,"fields":{"first_name":"Артур","last_name":"Кларк"}},
+	{"model":"catalog.book","pk":1,"fields":{"title":"Основание","isbn":"978-5-389-07407-7","description":"Классика НФ","category":1,"price":"799.00","rating":"4.80","created_at":"2025-01-01T00:00:00Z"}},
+	{"model":"catalog.book","pk":2,"fields":{"title":"Zero to One","isbn":"978-0-8041-3929-8","description":"Стартапы","category":2,"price":"999.00","rating":"4.60","created_at":"2025-01-02T00:00:00Z"}},
+	{"model":"catalog.book","pk":3,"fields":{"title":"Cosmos","isbn":"978-0-345-33135-9","description":"Про космос","category":3,"price":"899.00","rating":"4.70","created_at":"2025-01-03T00:00:00Z"}},
+	{"model":"catalog.book","pk":4,"fields":{"title":"Rendezvous with Rama","isbn":"978-0-575-04462-7","description":"Кларк","category":1,"price":"850.00","rating":"4.50","created_at":"2025-01-04T00:00:00Z"}},
+	{"model":"catalog.bookauthors","pk":1,"fields":{"book":1,"author":1}},
+	{"model":"catalog.bookauthors","pk":2,"fields":{"book":2,"author":2}},
+	{"model":"catalog.bookauthors","pk":3,"fields":{"book":3,"author":3}},
+	{"model":"catalog.bookauthors","pk":4,"fields":{"book":4,"author":4}},
+	{"model":"catalog.inventory","pk":1,"fields":{"book":1,"stock":10,"reserved":0}},
+	{"model":"catalog.inventory","pk":2,"fields":{"book":2,"stock":12,"reserved":0}},
+	{"model":"catalog.inventory","pk":3,"fields":{"book":3,"stock":8,"reserved":0}},
+	{"model":"catalog.inventory","pk":4,"fields":{"book":4,"stock":7,"reserved":0}}
+]

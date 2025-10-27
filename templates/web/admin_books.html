@@ -1,0 +1,42 @@
+{% extends 'web/base.html' %}
+{% block title %}Админ — Товары{% endblock %}
+{% block content %}
+<h1>Товары</h1>
+<div class="grid">
+	<article class="card">
+		<h3 style="margin-top:0">Добавить книгу</h3>
+		<form method="post">
+			{% csrf_token %}
+			{{ form.as_p }}
+			<button class="btn small" type="submit">Сохранить</button>
+		</form>
+	</article>
+	<article class="card" style="grid-column: span 2">
+		<h3 style="margin-top:0">Список книг</h3>
+		<table>
+			<thead><tr><th>Название</th><th>Категория</th><th>Цена</th><th></th></tr></thead>
+			<tbody>
+				{% for b in books %}
+				<tr>
+					<td>{{ b.title }}</td>
+					<td>{{ b.category.name }}</td>
+					<td>{{ b.price }} ₽</td>
+					<td>
+						<a class="btn small" href="/admin/books/{{ b.id }}/edit/">Изм.</a>
+						<form method="post" action="/admin/books/{{ b.id }}/delete/" style="display:inline">
+							{% csrf_token %}
+							<button class="secondary small" type="submit">Удалить</button>
+						</form>
+					</td>
+				</tr>
+				{% empty %}
+				<tr><td colspan="4">Нет книг</td></tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</article>
+</div>
+{% endblock %}
+
+
+

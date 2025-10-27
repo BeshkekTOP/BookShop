@@ -1,0 +1,16 @@
+{% extends 'web/base.html' %}
+{% block title %}Профиль — Книжный магазин{% endblock %}
+{% block content %}
+<div class="center-card">
+	<h2 style="margin-top:0">Профиль</h2>
+	<form method="post">
+		{% csrf_token %}
+		{{ form.as_p }}
+		<button type="submit" style="width:100%">Сохранить</button>
+	</form>
+</div>
+{% endblock %}
+
+
+
+

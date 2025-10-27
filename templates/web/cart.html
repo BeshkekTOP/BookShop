@@ -1,0 +1,51 @@
+{% extends 'web/base.html' %}
+{% block title %}Корзина — Книжный магазин{% endblock %}
+{% block content %}
+<h1>Корзина</h1>
+<table>
+	<thead>
+		<tr><th>Книга</th><th>Кол-во</th><th>Цена</th><th>Сумма</th><th></th></tr>
+	</thead>
+	<tbody>
+		{% for it in items %}
+		<tr>
+			<td>{{ it.book.title }}</td>
+			<td>
+				<form method="post" style="display:inline">
+					{% csrf_token %}
+					<input type="hidden" name="book" value="{{ it.book.id }}" />
+					<input type="hidden" name="action" value="dec" />
+					<button type="submit" class="small">−</button>
+				</form>
+				{{ it.quantity }}
+				<form method="post" style="display:inline">
+					{% csrf_token %}
+					<input type="hidden" name="book" value="{{ it.book.id }}" />
+					<input type="hidden" name="action" value="inc" />
+					<button type="submit" class="small">+</button>
+				</form>
+			</td>
+			<td>{{ it.book.price }} ₽</td>
+			<td>{{ it.book.price|floatformat:2|add:"0" }}</td>
+			<td>
+				<form method="post">
+					{% csrf_token %}
+					<input type="hidden" name="book" value="{{ it.book.id }}" />
+					<input type="hidden" name="action" value="remove" />
+					<button type="submit" class="secondary small">Удалить</button>
+				</form>
+			</td>
+		</tr>
+		{% empty %}
+		<tr><td colspan="5">Пусто</td></tr>
+		{% endfor %}
+	</tbody>
+</table>
+{% if items %}
+<p style="text-align:right"><strong>Итого: {{ total }} ₽</strong></p>
+<form method="post" action="/checkout/" style="text-align:right">
+	{% csrf_token %}
+	<button type="submit" class="btn small">Оформить заказ</button>
+</form>
+{% endif %}
+{% endblock %}

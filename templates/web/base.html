@@ -1,0 +1,47 @@
+{% load static %}
+<!doctype html>
+<html lang="ru">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>{% block title %}Книжный магазин{% endblock %}</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css">
+	<link rel="stylesheet" href="{% static 'styles.css' %}">
+</head>
+<body class="light">
+	<header class="header">
+		<div class="nav container">
+			<ul class="nav-left">
+				<li class="brand"><a href="/">Bookstore</a></li>
+				<li><a href="/catalog/">Каталог</a></li>
+				<li><a href="/cart/">Корзина</a></li>
+				{% if request.user.is_staff %}
+				<li class="dropdown">
+					<a href="#">Управление ▾</a>
+					<ul class="dropdown-menu">
+						<li><a href="/admin/books/">Товары</a></li>
+						<li><a href="/admin/authors/">Авторы</a></li>
+						<li><a href="/admin/categories/">Категории</a></li>
+					</ul>
+				</li>
+				{% endif %}
+			</ul>
+			<ul class="nav-right">
+				{% if request.user.is_authenticated %}
+				<li><a href="/profile/">{{ request.user.username }}</a></li>
+				<li><a class="btn btn-ghost" href="/logout/">Выход</a></li>
+				{% else %}
+				<li><a class="btn btn-ghost" href="/login/">Вход</a></li>
+				<li><a class="btn" href="/register/">Регистрация</a></li>
+				{% endif %}
+			</ul>
+		</div>
+	</header>
+	<main class="container main">
+		{% for message in messages %}
+		<div class="alert">{{ message }}</div>
+		{% endfor %}
+		{% block content %}{% endblock %}
+	</main>
+</body>
+</html>
