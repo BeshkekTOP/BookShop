@@ -1,0 +1,108 @@
+{% extends 'web/base.html' %}
+{% block title %}Управление пользователями{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>👥 Управление пользователями</h1>
+	
+	<!-- Поиск и фильтры -->
+	<div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+		<form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end;">
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 500;">Поиск:</label>
+				<input type="text" name="search" value="{{ search }}" placeholder="Имя, email, телефон..." 
+				       style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+			</div>
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 500;">Роль:</label>
+				<select name="role" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+					<option value="">Все роли</option>
+					<option value="guest" {% if role_filter == 'guest' %}selected{% endif %}>Гость</option>
+					<option value="buyer" {% if role_filter == 'buyer' %}selected{% endif %}>Покупатель</option>
+					<option value="manager" {% if role_filter == 'manager' %}selected{% endif %}>Менеджер</option>
+					<option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Администратор</option>
+				</select>
+			</div>
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 500;">Статус:</label>
+				<select name="status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+					<option value="">Все</option>
+					<option value="active" {% if status_filter == 'active' %}selected{% endif %}>Активные</option>
+					<option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>Заблокированные</option>
+				</select>
+			</div>
+			<div>
+				<button type="submit" class="btn">Поиск</button>
+				<a href="/admin/users/" class="btn" style="background: #6b7280;">Сбросить</a>
+			</div>
+		</form>
+	</div>
+	
+	<!-- Таблица пользователей -->
+	<div style="background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Пользователь</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Роль</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Статус</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Дата регистрации</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Действия</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user in users %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px;">
+						<strong>{{ user.username }}</strong>
+						{% if user.first_name or user.last_name %}
+							<br><small style="color: #6b7280;">{{ user.first_name }} {{ user.last_name }}</small>
+						{% endif %}
+					</td>
+					<td style="padding: 12px;">{{ user.email|default:"—" }}</td>
+					<td style="padding: 12px; text-align: center;">
+						<span style="padding: 4px 8px; border-radius: 4px; font-size: 0.85em;
+							{% if user.profile.role == 'admin' %}background: #fee2e2; color: #991b1b;
+							{% elif user.profile.role == 'manager' %}background: #dbeafe; color: #1e40af;
+							{% elif user.profile.role == 'buyer' %}background: #dcfce7; color: #166534;
+							{% else %}background: #f3f4f6; color: #6b7280;{% endif %}">
+							{{ user.profile.get_role_display }}
+						</span>
+					</td>
+					<td style="padding: 12px; text-align: center;">
+						{% if user.profile.is_blocked %}
+							<span style="color: #ef4444; font-weight: 600;">🔒 Заблокирован</span>
+						{% else %}
+							<span style="color: #10b981; font-weight: 600;">✅ Активен</span>
+						{% endif %}
+					</td>
+					<td style="padding: 12px; text-align: center; color: #6b7280;">
+						{{ user.date_joined|date:"d.m.Y" }}
+					</td>
+					<td style="padding: 12px; text-align: center;">
+						<a href="/admin/users/{{ user.id }}/" class="btn small">Просмотр</a>
+					</td>
+				</tr>
+				{% empty %}
+				<tr>
+					<td colspan="6" style="padding: 40px; text-align: center; color: #6b7280;">
+						Пользователи не найдены
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

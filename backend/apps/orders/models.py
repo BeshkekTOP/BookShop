@@ -1,5 +1,7 @@
 from django.conf import settings
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Cart(models.Model):
@@ -53,4 +55,23 @@ class OrderItem(models.Model):
     book = models.ForeignKey('catalog.Book', on_delete=models.PROTECT)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField()
+
+
+@receiver(post_save, sender=Order)
+def update_sales_stats_on_order_change(sender, instance, created, **kwargs):
+    """Обновить статистику продаж при изменении статуса заказа"""
+    if instance.status == 'delivered':
+        try:
+            from backend.apps.analytics.models import SalesStats, TopSellingBook, CustomerStats
+            from django.utils import timezone
+            
+            # Обновляем статистику за день
+            SalesStats.update_daily_stats(instance.created_at.date())
+            TopSellingBook.update_daily_top_books(instance.created_at.date())
+            CustomerStats.update_daily_customer_stats(instance.created_at.date())
+        except Exception as e:
+            # Логируем ошибку, но не прерываем выполнение
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Ошибка при обновлении статистики продаж: {e}")
 

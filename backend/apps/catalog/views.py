@@ -17,17 +17,19 @@ class ReadOnlyPermission(permissions.BasePermission):
         return request.user and request.user.is_staff
 
 
-class CategoryViewSet(viewsets.ReadOnlyModelViewSet):
+class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+    permission_classes = [ReadOnlyPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["name"]
     ordering_fields = ["name"]
 
 
-class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
+class AuthorViewSet(viewsets.ModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+    permission_classes = [ReadOnlyPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["first_name", "last_name"]
     ordering_fields = ["last_name", "first_name"]
@@ -49,6 +51,18 @@ class BookViewSet(viewsets.ModelViewSet):
         if self.action in ("create", "update", "partial_update"):
             return BookWriteSerializer
         return BookSerializer
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

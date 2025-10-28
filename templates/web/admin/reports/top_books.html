@@ -1,0 +1,53 @@
+{% extends 'web/base.html' %}
+{% block title %}Топ продаваемых книг{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>📈 Топ-10 продаваемых книг</h1>
+	
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 20px;">
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">#</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Книга</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Категория</th>
+					<th style="padding: 12px; text-align: right; font-weight: 600;">Цена</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Продано</th>
+					<th style="padding: 12px; text-align: right; font-weight: 600;">Выручка</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Заказов</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for book in top_books %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px; font-weight: 600; color: #2563eb;">{{ forloop.counter }}</td>
+					<td style="padding: 12px;"><strong>{{ book.book__title }}</strong></td>
+					<td style="padding: 12px; text-align: center;">{{ book.book__category__name }}</td>
+					<td style="padding: 12px; text-align: right;">{{ book.book__price }} ₽</td>
+					<td style="padding: 12px; text-align: center; font-weight: 600; color: #10b981;">{{ book.total_sold|default:0 }}</td>
+					<td style="padding: 12px; text-align: right; font-weight: 600; color: #2563eb;">{{ book.total_revenue|floatformat:0 }} ₽</td>
+					<td style="padding: 12px; text-align: center;">{{ book.order_count|default:0 }}</td>
+				</tr>
+				{% empty %}
+				<tr>
+					<td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
+						Данных пока нет
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

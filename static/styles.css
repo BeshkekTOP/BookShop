@@ -1,4 +1,4 @@
-/* Light modern UI with responsive design */
+/* Light modern UI with responsive design and dark theme support */
 :root{
 	--bg:#f7f7fb;--card:#ffffff;--text:#0f172a;--muted:#64748b;--primary:#2563eb;--border:#e5e7eb;
 	--radius:12px;--shadow:0 4px 24px rgba(15,23,42,.06);
@@ -6,6 +6,20 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body.light{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif}
+
+/* Dark theme */
+body.dark{
+	--bg:#1a1a1a;--card:#2a2a2a;--text:#e5e5e5;--muted:#888888;--primary:#4a9eff;--border:#404040;
+	--shadow:0 4px 24px rgba(0,0,0,.3);
+	background:var(--bg);color:var(--text);
+}
+
+body.dark .card{background:var(--card);border-color:var(--border);color:var(--text)}
+body.dark .alert{background:var(--card);border-color:var(--border);color:var(--text)}
+body.dark .table th{background:var(--card);color:var(--text)}
+body.dark .table td{color:var(--text)}
+body.dark .dropdown-menu{background:var(--card);border-color:var(--border)}
+body.dark input,body.dark select,body.dark textarea{background:var(--card);border-color:var(--border);color:var(--text)}
 
 /* Responsive container - брейкпоинты */
 .container{max-width:1100px;margin:0 auto;padding:16px}
@@ -31,18 +45,22 @@ body.light{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple
 	.grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
 }
 .header{background:#ffffff;border-bottom:1px solid var(--border)}
+body.dark .header{background:var(--card);border-bottom:1px solid var(--border)}
 .nav{display:flex;justify-content:space-between;align-items:center}
 .nav ul{display:flex;gap:14px;margin:0;padding:0;list-style:none}
 .nav .brand a{font-weight:700}
 .nav a{color:var(--text);text-decoration:none}
 .nav a:hover{color:var(--primary)}
+body.dark .nav a{color:var(--text)}
 
 .nav .dropdown{position:relative}
 .nav .dropdown-menu{position:absolute;top:100%;left:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow);padding:8px;display:none;min-width:180px;z-index:10}
+body.dark .nav .dropdown-menu{background:var(--card);border-color:var(--border)}
 .nav .dropdown:hover .dropdown-menu{display:block}
 .nav .dropdown-menu li{padding:0}
 .nav .dropdown-menu a{display:block;padding:8px 10px}
 .nav .dropdown-menu a:hover{background:#f8fafc}
+body.dark .nav .dropdown-menu a:hover{background:var(--bg)}
 
 .main{padding-top:20px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
@@ -52,8 +70,10 @@ body.light{background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple
 input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff}
 button,.btn{display:inline-block;padding:8px 12px;border-radius:10px;border:1px solid var(--primary);background:var(--primary);color:#fff;cursor:pointer;font-size:14px}
 .btn-ghost{background:#fff;border-color:var(--border);color:var(--text)}
+body.dark .btn-ghost{background:var(--card);border-color:var(--border);color:var(--text)}
 button.small,.btn.small{padding:6px 10px;font-size:13px}
 button.secondary{background:#fff;color:#ef4444;border-color:#ef4444}
+body.dark button.secondary{background:var(--card);color:#ef4444;border-color:#ef4444}
 button:disabled{opacity:.6;cursor:not-allowed}
 
 /* Grids */
@@ -61,13 +81,31 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 /* Auth cards */
 .center-card{max-width:420px;margin:10vh auto;padding:24px;border:1px solid var(--border);border-radius:16px;background:#fff;box-shadow:var(--shadow)}
+body.dark .center-card{background:var(--card);border-color:var(--border)}
 
 /* Tables */
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+body.dark table{background:var(--card);border-color:var(--border)}
 th,td{padding:10px 12px;border-bottom:1px solid var(--border);text-align:left}
 th{background:#fafafa;color:#111827}
+body.dark th{background:var(--bg);color:var(--text)}
+body.dark td{color:var(--text)}
 
 /* Catalog search */
 .catalog-search{display:flex;gap:8px}
 .catalog-search input{flex:1}
 .catalog-search button{padding:8px 12px}
+
+/* Book images */
+.card img{transition:transform .3s ease,box-shadow .3s ease}
+.card img:hover{transform:scale(1.05);box-shadow:0 8px 24px rgba(0,0,0,.15)}
+
+/* Responsive book cards */
+@media (max-width: 640px) {
+	.grid{grid-template-columns:1fr}
+	.card img{height:auto;max-height:180px}
+}
+
+/* Dark theme for images */
+body.dark .card img{box-shadow:0 2px 8px rgba(255,255,255,.1)}
+body.dark .card img:hover{box-shadow:0 8px 24px rgba(255,255,255,.2)}

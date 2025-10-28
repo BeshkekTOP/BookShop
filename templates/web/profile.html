@@ -1,15 +1,27 @@
 {% extends 'web/base.html' %}
-{% block title %}Профиль — Книжный магазин{% endblock %}
+{% block title %}Профиль{% endblock %}
 {% block content %}
 <div class="center-card">
-	<h2 style="margin-top:0">Профиль</h2>
-	<form method="post">
-		{% csrf_token %}
-		{{ form.as_p }}
-		<button type="submit" style="width:100%">Сохранить</button>
-	</form>
+	<h2 style="margin-top:0">👤 Профиль</h2>
+	
+	<div style="margin-bottom: 20px;">
+		<p><strong>Имя пользователя:</strong> {{ request.user.username }}</p>
+		<p><strong>Email:</strong> {{ request.user.email|default:"—" }}</p>
+		<p><strong>Имя:</strong> {{ request.user.first_name|default:"—" }} {{ request.user.last_name|default:"" }}</p>
+		{% if request.user.profile %}
+			<p><strong>Телефон:</strong> {{ request.user.profile.phone|default:"—" }}</p>
+			<p><strong>Город:</strong> {{ request.user.profile.city|default:"—" }}</p>
+			<p><strong>Адрес:</strong> {{ request.user.profile.address|default:"—" }}</p>
+		{% endif %}
+	</div>
+	
+	<div style="display: flex; gap: 10px; margin-top: 20px;">
+		<a href="/profile/edit/" class="btn">⚙️ Редактировать профиль</a>
+		<a href="/orders/" class="btn" style="background: #6b7280;">📦 История заказов</a>
+	</div>
 </div>
 {% endblock %}
+
 
 
 

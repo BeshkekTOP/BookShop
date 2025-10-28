@@ -1,0 +1,72 @@
+{% extends 'web/base.html' %}
+{% block title %}Мои заказы{% endblock %}
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+	<h1>📦 Мои заказы</h1>
+	
+	{% if orders %}
+	<div style="margin-top: 20px;">
+		{% for order in orders %}
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 15px;">
+			<div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+				<div>
+					<h3 style="margin: 0;">Заказ #{{ order.id }}</h3>
+					<p style="margin: 5px 0; color: #6b7280; font-size: 0.9em;">
+						{{ order.created_at|date:"d.m.Y H:i" }}
+					</p>
+				</div>
+				<div style="text-align: right;">
+					<p style="margin: 0; font-size: 1.2em; font-weight: 600; color: #2563eb;">
+						{{ order.total_amount }} ₽
+					</p>
+					<p style="margin: 5px 0;">
+						{% if order.status == 'processing' %}
+							<span style="color: #f59e0b; font-weight: 600;">🔄 Обрабатывается</span>
+						{% elif order.status == 'shipped' %}
+							<span style="color: #2563eb; font-weight: 600;">📦 Отправлен</span>
+						{% elif order.status == 'delivered' %}
+							<span style="color: #10b981; font-weight: 600;">✅ Доставлен</span>
+						{% elif order.status == 'cancelled' %}
+							<span style="color: #ef4444; font-weight: 600;">❌ Отменен</span>
+						{% endif %}
+					</p>
+				</div>
+			</div>
+			
+			<div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+				<p style="margin: 0;"><strong>Адрес доставки:</strong></p>
+				<p style="margin: 5px 0 0 0; color: #6b7280;">
+					{{ order.shipping_city }}, {{ order.shipping_address }}
+					{% if order.shipping_postal_code %}
+						<br>Индекс: {{ order.shipping_postal_code }}
+					{% endif %}
+				</p>
+			</div>
+			
+			<div style="text-align: right;">
+				<a href="/orders/{{ order.id }}/" class="btn small">Подробнее</a>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+	{% else %}
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 60px; text-align: center; margin-top: 20px;">
+		<p style="font-size: 3em; margin: 0;">📦</p>
+		<h2 style="margin: 20px 0;">У вас пока нет заказов</h2>
+		<p style="color: #6b7280; margin-bottom: 30px;">Начните с просмотра каталога</p>
+		<a href="/catalog/" class="btn">Перейти в каталог</a>
+	</div>
+	{% endif %}
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

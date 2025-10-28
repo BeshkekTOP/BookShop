@@ -45,3 +45,15 @@ class PurchaseEventSerializer(serializers.ModelSerializer):
         )
         read_only_fields = ("timestamp",)
 
+
+
+
+
+
+
+
+
+
+
+
+

@@ -4,14 +4,15 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.views.decorators.http import require_http_methods
 
 from backend.apps.catalog.models import Book, Category, Author, Inventory, BookAuthors
 from backend.apps.orders.models import Cart, CartItem, Order, OrderItem
 from backend.apps.users.models import Profile
+from backend.apps.core.decorators import guest_required, buyer_required, admin_required
 from django import forms
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 
 class ProfileForm(forms.ModelForm):
@@ -35,18 +36,83 @@ def home(request):
 
 def catalog_list(request):
     q = request.GET.get('q', '')
-    qs = Book.objects.all()
+    category_filter = request.GET.get('category', '')
+    price_min = request.GET.get('price_min', '')
+    price_max = request.GET.get('price_max', '')
+    rating_min = request.GET.get('rating_min', '')
+    
+    qs = Book.objects.filter(is_active=True).annotate(
+        avg_rating=Avg('reviews__rating'),
+        review_count=Count('reviews')
+    )
+    
+    # Поиск по названию, ISBN
     if q:
-        qs = qs.filter(Q(title__icontains=q) | Q(isbn__icontains=q))
-    return render(request, 'web/catalog.html', {"books": qs, "q": q})
+        qs = qs.filter(Q(title__icontains=q) | Q(isbn__icontains=q) | 
+                       Q(book_authors__author__first_name__icontains=q) |
+                       Q(book_authors__author__last_name__icontains=q))
+    
+    # Фильтрация по категории
+    if category_filter:
+        qs = qs.filter(category__slug=category_filter)
+    
+    # Фильтрация по цене
+    if price_min:
+        try:
+            qs = qs.filter(price__gte=Decimal(price_min))
+        except (ValueError, InvalidOperation):
+            pass
+    if price_max:
+        try:
+            qs = qs.filter(price__lte=Decimal(price_max))
+        except (ValueError, InvalidOperation):
+            pass
+    
+    # Фильтрация по рейтингу
+    if rating_min:
+        try:
+            qs = qs.filter(rating__gte=Decimal(rating_min))
+        except (ValueError, InvalidOperation):
+            pass
+    
+    # Исключаем дубликаты
+    qs = qs.distinct()
+    
+    # Список категорий для фильтра
+    categories = Category.objects.all()
+    
+    return render(request, 'web/catalog.html', {
+        "books": qs,
+        "categories": categories,
+        "q": q
+    })
 
 
 def book_detail(request, pk: int):
+    """Детальная информация о книге - доступна всем (включая гостей)"""
     book = get_object_or_404(Book, pk=pk)
-    return render(request, 'web/book_detail.html', {"book": book})
+    
+    # Получаем авторов книги
+    authors = book.book_authors.select_related('author').all()
+    
+    # Получаем информацию о наличии на складе
+    try:
+        inventory = book.inventory
+    except Inventory.DoesNotExist:
+        inventory = None
+    
+    # Получаем отзывы (только для просмотра)
+    reviews = book.reviews.select_related('user').all()[:10]  # Последние 10 отзывов
+    
+    return render(request, 'web/book_detail.html', {
+        "book": book,
+        "authors": [a.author for a in authors],
+        "inventory": inventory,
+        "reviews": reviews
+    })
 
 
-@login_required
+@buyer_required
 @require_http_methods(["GET", "POST"])
 def cart_view(request):
     cart, _ = Cart.objects.get_or_create(user=request.user)
@@ -85,7 +151,7 @@ def cart_view(request):
     return render(request, 'web/cart.html', {"cart": cart, "items": items, "total": total})
 
 
-@login_required
+@buyer_required
 @transaction.atomic
 def checkout_view(request):
     cart = Cart.objects.filter(user=request.user).prefetch_related("items__book").first()
@@ -132,9 +198,9 @@ def login_view(request):
     return render(request, 'web/login.html', {"form": form})
 
 
+@guest_required
 def register_view(request):
-    if request.user.is_authenticated:
-        return redirect('catalog')
+    """Регистрация доступна только гостям"""
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
@@ -143,6 +209,7 @@ def register_view(request):
             user = authenticate(username=user.username, password=raw_password)
             if user:
                 login(request, user)
+                messages.success(request, 'Добро пожаловать! Регистрация прошла успешно.')
                 return redirect('catalog')
     else:
         form = UserCreationForm()
@@ -155,7 +222,7 @@ def logout_view(request):
     return redirect('login')
 
 
-@login_required
+@buyer_required
 def profile_view(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     if request.method == 'POST':
@@ -169,7 +236,7 @@ def profile_view(request):
     return render(request, 'web/profile.html', {"form": form})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@admin_required
 @require_http_methods(["GET", "POST"])
 def admin_books(request):
     if request.method == 'POST':
@@ -190,7 +257,7 @@ def admin_books(request):
     return render(request, 'web/admin_books.html', {"form": form, "books": books})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@admin_required
 @require_http_methods(["GET", "POST"])
 def admin_book_edit(request, pk: int):
     book = get_object_or_404(Book, pk=pk)
@@ -211,7 +278,7 @@ def admin_book_edit(request, pk: int):
     return render(request, 'web/admin_book_edit.html', {"form": form, "book": book})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@admin_required
 @require_http_methods(["POST"]) 
 def admin_book_delete(request, pk: int):
     book = get_object_or_404(Book, pk=pk)
@@ -220,7 +287,7 @@ def admin_book_delete(request, pk: int):
     return redirect('admin-books')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@admin_required
 @require_http_methods(["GET", "POST"])
 def admin_authors(request):
     if request.method == 'POST':
@@ -234,7 +301,7 @@ def admin_authors(request):
     return render(request, 'web/admin_authors.html', {"authors": authors})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@admin_required
 @require_http_methods(["GET", "POST"])
 def admin_categories(request):
     if request.method == 'POST':

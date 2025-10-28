@@ -1,0 +1,138 @@
+{% extends 'web/base.html' %}
+{% block title %}Оформление заказа{% endblock %}
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+	<h1>📦 Оформление заказа</h1>
+	
+	<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+		<!-- Форма доставки -->
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+			<h2 style="margin: 0 0 15px 0;">Адрес доставки</h2>
+			
+			<form method="post" id="checkout-form">
+				{% csrf_token %}
+				
+				<!-- Информация о доставке -->
+				<div style="margin-bottom: 20px;">
+					<h3 style="margin: 0 0 15px 0; color: #374151;">📍 Информация о доставке</h3>
+					
+					<div style="margin-bottom: 15px;">
+						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Город *</label>
+						<input type="text" name="shipping_city" value="{{ profile.city|default:'' }}" required 
+						       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"
+						       placeholder="Введите город доставки">
+					</div>
+					
+					<div style="margin-bottom: 15px;">
+						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Адрес *</label>
+						<textarea name="shipping_address" rows="3" required 
+						          style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"
+						          placeholder="Улица, дом, квартира">{{ profile.address|default:'' }}</textarea>
+					</div>
+					
+					<div style="margin-bottom: 15px;">
+						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Почтовый индекс</label>
+						<input type="text" name="shipping_postal_code" value="{{ profile.postal_code|default:'' }}" 
+						       style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"
+						       placeholder="123456">
+					</div>
+				</div>
+				
+				<!-- Дополнительная информация -->
+				<div style="margin-bottom: 20px;">
+					<h3 style="margin: 0 0 15px 0; color: #374151;">📝 Дополнительная информация</h3>
+					
+					<div style="margin-bottom: 15px;">
+						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Примечания к заказу</label>
+						<textarea name="notes" rows="3" placeholder="Дополнительная информация для курьера, особые пожелания по доставке..." 
+						          style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;"></textarea>
+					</div>
+				</div>
+				
+				<!-- Кнопка оформления -->
+				<div style="margin-top: 25px;">
+					<button type="submit" class="btn" style="width: 100%; font-size: 1.1em; padding: 15px; background: #10b981; border: none; color: white; border-radius: 8px; cursor: pointer; transition: background 0.2s;"
+					        onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+						✅ Оформить заказ на {{ total }} ₽
+					</button>
+				</div>
+			</form>
+		</div>
+		
+		<!-- Корзина -->
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; height: fit-content;">
+			<h2 style="margin: 0 0 15px 0;">Ваш заказ</h2>
+			
+			{% for item_data in items %}
+			<div style="padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
+				<p style="margin: 0; font-weight: 600;">{{ item_data.item.book.title }}</p>
+				<p style="margin: 5px 0; color: #6b7280; font-size: 0.9em;">
+					{{ item_data.item.quantity }} × {{ item_data.item.book.price }} ₽
+				</p>
+				<p style="margin: 5px 0 0 0; text-align: right; font-weight: 600;">
+					{{ item_data.total }} ₽
+				</p>
+			</div>
+			{% endfor %}
+			
+			<div style="border-top: 2px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
+				<p style="margin: 0; font-size: 1.3em; font-weight: 600; color: #2563eb;">
+					Итого: {{ total }} ₽
+				</p>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('checkout-form');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    
+    form.addEventListener('submit', function(e) {
+        // Валидация полей перед отправкой
+        const city = form.querySelector('input[name="shipping_city"]').value.trim();
+        const address = form.querySelector('textarea[name="shipping_address"]').value.trim();
+        
+        if (!city || !address) {
+            e.preventDefault();
+            alert('Пожалуйста, заполните все обязательные поля');
+            return;
+        }
+        
+        // Показываем индикатор загрузки только после валидации
+        submitBtn.innerHTML = '⏳ Обрабатываем заказ...';
+        submitBtn.disabled = true;
+        
+        // Восстанавливаем кнопку через 10 секунд на случай, если что-то пойдет не так
+        setTimeout(function() {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 10000);
+    });
+    
+    // Валидация в реальном времени
+    const requiredFields = form.querySelectorAll('input[required], textarea[required]');
+    requiredFields.forEach(field => {
+        field.addEventListener('blur', function() {
+            if (this.value.trim() === '') {
+                this.style.borderColor = '#ef4444';
+                this.style.borderWidth = '2px';
+            } else {
+                this.style.borderColor = '#10b981';
+                this.style.borderWidth = '2px';
+            }
+        });
+        
+        field.addEventListener('input', function() {
+            if (this.value.trim() !== '') {
+                this.style.borderColor = '#10b981';
+                this.style.borderWidth = '2px';
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
+

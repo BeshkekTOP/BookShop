@@ -1,39 +1,35 @@
 from django.contrib import admin
-from .models import PageView, BookView, SearchQuery, PurchaseEvent
+from .models import SalesStats, TopSellingBook, CustomerStats
 
 
-@admin.register(PageView)
-class PageViewAdmin(admin.ModelAdmin):
-    list_display = ("path", "user", "ip_address", "timestamp")
-    list_filter = ("timestamp", "path")
-    search_fields = ("path", "user__username", "ip_address")
-    readonly_fields = ("timestamp",)
-    ordering = ("-timestamp",)
+@admin.register(SalesStats)
+class SalesStatsAdmin(admin.ModelAdmin):
+    list_display = ("date", "total_orders", "total_revenue", "total_books_sold", "average_order_value")
+    list_filter = ("date",)
+    search_fields = ("date",)
+    readonly_fields = ("created_at", "updated_at")
+    ordering = ("-date",)
 
 
-@admin.register(BookView)
-class BookViewAdmin(admin.ModelAdmin):
-    list_display = ("book", "user", "ip_address", "timestamp")
-    list_filter = ("timestamp", "book__category")
-    search_fields = ("book__title", "user__username", "ip_address")
-    readonly_fields = ("timestamp",)
-    ordering = ("-timestamp",)
+@admin.register(TopSellingBook)
+class TopSellingBookAdmin(admin.ModelAdmin):
+    list_display = ("book", "date", "quantity_sold", "revenue", "rank")
+    list_filter = ("date", "rank")
+    search_fields = ("book__title", "book__author__name")
+    readonly_fields = ("created_at",)
+    ordering = ("-date", "rank")
 
 
-@admin.register(SearchQuery)
-class SearchQueryAdmin(admin.ModelAdmin):
-    list_display = ("query", "user", "results_count", "timestamp")
-    list_filter = ("timestamp", "results_count")
-    search_fields = ("query", "user__username")
-    readonly_fields = ("timestamp",)
-    ordering = ("-timestamp",)
+@admin.register(CustomerStats)
+class CustomerStatsAdmin(admin.ModelAdmin):
+    list_display = ("date", "total_customers", "new_customers", "returning_customers", "average_customer_value")
+    list_filter = ("date",)
+    search_fields = ("date",)
+    readonly_fields = ("created_at",)
+    ordering = ("-date",)
 
 
-@admin.register(PurchaseEvent)
-class PurchaseEventAdmin(admin.ModelAdmin):
-    list_display = ("user", "order", "total_amount", "items_count", "timestamp")
-    list_filter = ("timestamp", "total_amount")
-    search_fields = ("user__username", "order__id")
-    readonly_fields = ("timestamp",)
-    ordering = ("-timestamp",)
+
+
+
 

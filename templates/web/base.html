@@ -7,6 +7,7 @@
 	<title>{% block title %}Книжный магазин{% endblock %}</title>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/modern-normalize/modern-normalize.css">
 	<link rel="stylesheet" href="{% static 'styles.css' %}">
+	{% block extra_head %}{% endblock %}
 </head>
 <body class="light" 
 	  data-is-authenticated="{% if request.user.is_authenticated %}true{% else %}false{% endif %}"
@@ -17,19 +18,42 @@
 				<li class="brand"><a href="/">Bookstore</a></li>
 				<li><a href="/catalog/">Каталог</a></li>
 				<li><a href="/cart/">Корзина</a></li>
-				{% if request.user.is_staff %}
-				<li class="dropdown">
-					<a href="#">Управление ▾</a>
-					<ul class="dropdown-menu">
-						<li><a href="/admin/books/">Товары</a></li>
-						<li><a href="/admin/authors/">Авторы</a></li>
-						<li><a href="/admin/categories/">Категории</a></li>
-					</ul>
-				</li>
+				{% if request.user.is_authenticated %}
+					{% if request.user.profile.role == 'admin' or request.user.is_staff %}
+					<li class="dropdown">
+						<a href="#">Управление ▾</a>
+						<ul class="dropdown-menu">
+							<li><a href="/admin/dashboard/">📊 Панель управления</a></li>
+							<li><hr style="margin: 5px 0;"></li>
+							<li><a href="/admin/users/">👥 Пользователи</a></li>
+							<li><a href="/admin/books/">📚 Книги</a></li>
+							<li><a href="/admin/authors/">✍️ Авторы</a></li>
+							<li><a href="/admin/categories/">📂 Категории</a></li>
+							<li><a href="/admin/inventory/">📦 Остатки</a></li>
+							<li><hr style="margin: 5px 0;"></li>
+							<li><a href="/admin/reports/">📈 Отчеты</a></li>
+							<li><a href="/admin/logs/">📝 Логи</a></li>
+						</ul>
+					</li>
+					{% elif request.user.profile.role == 'manager' %}
+					<li class="dropdown">
+						<a href="#">Менеджер ▾</a>
+						<ul class="dropdown-menu">
+							<li><a href="/manager/">📊 Панель менеджера</a></li>
+							<li><hr style="margin: 5px 0;"></li>
+							<li><a href="/manager/orders/">📋 Заказы</a></li>
+							<li><a href="/manager/statistics/">📈 Статистика</a></li>
+						</ul>
+					</li>
+					{% endif %}
 				{% endif %}
 			</ul>
 			<ul class="nav-right">
+				<li>
+					<button id="help-btn" class="btn-ghost" style="padding: 4px 8px; font-size: 1.2em; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; background: var(--card);" title="Горячие клавиши (Ctrl+?)">⌨️</button>
+				</li>
 				{% if request.user.is_authenticated %}
+				<li><a href="/orders/">📦 Заказы</a></li>
 				<li><a href="/profile/">{{ request.user.username }}</a></li>
 				<li><a class="btn btn-ghost" href="/logout/">Выход</a></li>
 				{% else %}
@@ -46,5 +70,24 @@
 		{% block content %}{% endblock %}
 	</main>
 	<script src="{% static 'keyboard.js' %}"></script>
+	<script src="{% static 'theme.js' %}"></script>
+	<script>
+		// Привязываем кнопку помощи к функции показа подсказок
+		(function() {
+			const helpBtn = document.getElementById('help-btn');
+			if (helpBtn) {
+				helpBtn.addEventListener('click', function(e) {
+					e.preventDefault();
+					e.stopPropagation();
+					if (window.KeyboardShortcuts && typeof window.KeyboardShortcuts.showHelp === 'function') {
+						window.KeyboardShortcuts.showHelp();
+					} else {
+						alert('Модуль горячих клавиш не загружен. Перезагрузите страницу.');
+					}
+				});
+			}
+		})();
+	</script>
+	{% block extra_scripts %}{% endblock %}
 </body>
 </html>

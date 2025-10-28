@@ -1,0 +1,87 @@
+{% extends 'web/base.html' %}
+{% block title %}Управление остатками{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>📦 Управление остатками на складе</h1>
+	
+	<!-- Поиск -->
+	<div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+		<form method="get" style="display: flex; gap: 10px;">
+			<input type="text" name="search" value="{{ search }}" placeholder="Поиск по названию книги..." 
+			       style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+			<button type="submit" class="btn">Поиск</button>
+			<a href="/admin/inventory/" class="btn" style="background: #6b7280;">Сбросить</a>
+		</form>
+	</div>
+	
+	<!-- Таблица -->
+	<div style="background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Книга</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Категория</th>
+					<th style="padding: 12px; text-align: right; font-weight: 600;">Цена</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">На складе</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Зарезервировано</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Доступно</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Действия</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for book in books %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px;">
+						<strong>{{ book.title }}</strong>
+						<br><small style="color: #6b7280;">ISBN: {{ book.isbn }}</small>
+					</td>
+					<td style="padding: 12px; text-align: center;">{{ book.category.name }}</td>
+					<td style="padding: 12px; text-align: right;">{{ book.price }} ₽</td>
+					{% if book.inventory %}
+					<td style="padding: 12px; text-align: center; font-weight: 600;">{{ book.inventory.stock }}</td>
+					<td style="padding: 12px; text-align: center; color: #f59e0b;">{{ book.inventory.reserved }}</td>
+					<td style="padding: 12px; text-align: center;">
+						<span style="font-weight: 600;
+							{% if book.inventory.available > 10 %}color: #10b981;
+							{% elif book.inventory.available > 0 %}color: #f59e0b;
+							{% else %}color: #ef4444;{% endif %}">
+							{{ book.inventory.available }}
+						</span>
+					</td>
+					<td style="padding: 12px; text-align: center;">
+						<form method="post" action="/admin/inventory/{{ book.id }}/update/" style="display: flex; gap: 5px;">
+							{% csrf_token %}
+							<input type="number" name="stock" value="{{ book.inventory.stock }}" min="0" 
+							       style="width: 80px; padding: 4px; border: 1px solid #d1d5db; border-radius: 4px;">
+							<button type="submit" class="btn small">Обновить</button>
+						</form>
+					</td>
+					{% else %}
+					<td colspan="4" style="padding: 12px; text-align: center; color: #6b7280;">
+						Нет информации о складе
+					</td>
+					{% endif %}
+				</tr>
+				{% empty %}
+				<tr>
+					<td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
+						Книги не найдены
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,132 @@
+{% extends 'web/base.html' %}
+{% block title %}Оставить отзыв{% endblock %}
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding: 20px;">
+	<h1>✍️ Оставить отзыв</h1>
+	
+	<!-- Информация о книге -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+		<h2 style="margin: 0 0 10px 0;">{{ book.title }}</h2>
+		<p style="margin: 0; color: #6b7280;">Категория: {{ book.category.name }}</p>
+	</div>
+	
+	<!-- Форма отзыва -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+		{% if existing_review %}
+		<div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+			<p style="margin: 0;"><strong>У вас уже есть отзыв:</strong></p>
+			<p style="margin: 5px 0;">Оценка: ⭐ {{ existing_review.rating }}/5</p>
+			{% if existing_review.text %}
+			<p style="margin: 5px 0;">{{ existing_review.text }}</p>
+			{% endif %}
+		</div>
+		{% endif %}
+		
+		<div style="background: #e0f2fe; border: 1px solid #0ea5e9; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+			<p style="margin: 0; color: #0c4a6e;"><strong>💡 Подсказка:</strong> После отправки отзыва вы будете перенаправлены на страницу каталога.</p>
+		</div>
+		
+		<form method="post" action="">
+			{% csrf_token %}
+			
+			<div style="margin-bottom: 20px;">
+				<label style="display: block; margin-bottom: 8px; font-weight: 600;">Оценка *:</label>
+				<div style="display: flex; gap: 8px; justify-content: center;">
+					{% for i in "12345" %}
+					<label style="cursor: pointer; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; flex: 1; transition: all 0.2s; background: #fff;" 
+					       onmouseover="this.style.borderColor='#3b82f6'; this.style.backgroundColor='#eff6ff';" 
+					       onmouseout="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#fff';">
+						<input type="radio" name="rating" value="{{ forloop.counter }}" 
+						       {% if existing_review and existing_review.rating == forloop.counter %}checked{% endif %}
+						       required style="display: none;" 
+						       onchange="updateStarSelection(this)">
+						<div style="font-size: 1.8em; margin-bottom: 4px;">⭐</div>
+						<div style="font-size: 0.9em; font-weight: 600; color: #374151;">{{ forloop.counter }}</div>
+					</label>
+					{% endfor %}
+				</div>
+				<small style="color: #6b7280; font-size: 0.9em; text-align: center; display: block; margin-top: 8px;">Выберите оценку от 1 до 5 звезд</small>
+			</div>
+			
+			<div style="margin-bottom: 20px;">
+				<label style="display: block; margin-bottom: 8px; font-weight: 600;">Текст отзыва:</label>
+				<textarea name="text" rows="6" placeholder="Напишите ваш отзыв о книге..." 
+				          style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical;">{% if existing_review %}{{ existing_review.text }}{% endif %}</textarea>
+			</div>
+			
+			<div style="display: flex; gap: 10px;">
+				<button type="submit" class="btn">
+					{% if existing_review %}Обновить отзыв{% else %}Отправить отзыв{% endif %}
+				</button>
+				<a href="/catalog/" class="btn" style="background: #6b7280;">Назад к каталогу</a>
+			</div>
+		</form>
+		
+		{% if existing_review %}
+		<form method="post" action="/reviews/{{ book.id }}/delete/" 
+		      onsubmit="return confirm('Вы уверены, что хотите удалить свой отзыв?');" 
+		      style="margin-top: 15px;">
+			{% csrf_token %}
+			<button type="submit" style="color: #ef4444; background: none; border: none; cursor: pointer; text-decoration: underline;">
+				🗑️ Удалить отзыв
+			</button>
+		</form>
+		{% endif %}
+	</div>
+</div>
+
+<script>
+function updateStarSelection(selectedValue) {
+    // Сбрасываем все звезды
+    const allLabels = document.querySelectorAll('label');
+    allLabels.forEach(label => {
+        if (label.querySelector('input[name="rating"]')) {
+            label.style.borderColor = '#e5e7eb';
+            label.style.backgroundColor = '#fff';
+        }
+    });
+    
+    // Подсвечиваем выбранную звезду и все предыдущие
+    for (let i = 1; i <= selectedValue; i++) {
+        const input = document.querySelector(`input[name="rating"][value="${i}"]`);
+        if (input) {
+            const label = input.parentElement;
+            label.style.borderColor = '#10b981';
+            label.style.backgroundColor = '#ecfdf5';
+        }
+    }
+}
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    // Добавляем обработчики для всех radio кнопок
+    const ratingInputs = document.querySelectorAll('input[name="rating"]');
+    ratingInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            updateStarSelection(parseInt(this.value));
+        });
+        
+        // Добавляем обработчик клика на label
+        const label = input.parentElement;
+        label.addEventListener('click', function(e) {
+            // Небольшая задержка, чтобы radio успел обновиться
+            setTimeout(() => {
+                const checkedInput = document.querySelector('input[name="rating"]:checked');
+                if (checkedInput) {
+                    updateStarSelection(parseInt(checkedInput.value));
+                }
+            }, 10);
+        });
+    });
+    
+    // Инициализируем с уже выбранным значением
+    const checkedInput = document.querySelector('input[name="rating"]:checked');
+    if (checkedInput) {
+        updateStarSelection(parseInt(checkedInput.value));
+    }
+});
+</script>
+{% endblock %}
+
+
+

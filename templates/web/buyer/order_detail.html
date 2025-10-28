@@ -1,0 +1,89 @@
+{% extends 'web/base.html' %}
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto; padding: 20px;">
+	<h1>📦 Заказ #{{ order.id }}</h1>
+	
+	<!-- Информация о заказе -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+		<h2 style="margin: 0 0 15px 0;">Информация о заказе</h2>
+		<table style="width: 100%;">
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280; width: 200px;">Дата заказа:</td>
+				<td style="padding: 8px 0; font-weight: 600;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Статус:</td>
+				<td style="padding: 8px 0;">
+					{% if order.status == 'processing' %}
+						<span style="color: #f59e0b; font-weight: 600;">🔄 Обрабатывается</span>
+					{% elif order.status == 'shipped' %}
+						<span style="color: #2563eb; font-weight: 600;">📦 Отправлен</span>
+					{% elif order.status == 'delivered' %}
+						<span style="color: #10b981; font-weight: 600;">✅ Доставлен</span>
+					{% elif order.status == 'cancelled' %}
+						<span style="color: #ef4444; font-weight: 600;">❌ Отменен</span>
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Сумма заказа:</td>
+				<td style="padding: 8px 0; font-size: 1.2em; font-weight: 600; color: #2563eb;">
+					{{ order.total_amount }} ₽
+				</td>
+			</tr>
+			{% if order.notes %}
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Примечание:</td>
+				<td style="padding: 8px 0;">{{ order.notes }}</td>
+			</tr>
+			{% endif %}
+		</table>
+	</div>
+	
+	<!-- Товары -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+		<h2 style="margin: 0 0 15px 0;">Товары в заказе</h2>
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Книга</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Цена</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Количество</th>
+					<th style="padding: 12px; text-align: right; font-weight: 600;">Сумма</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in items %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px;">
+						<strong>{{ item.book.title }}</strong>
+						<br><small style="color: #6b7280;">ISBN: {{ item.book.isbn }}</small>
+					</td>
+					<td style="padding: 12px; text-align: center;">{{ item.price }} ₽</td>
+					<td style="padding: 12px; text-align: center;">{{ item.quantity }}</td>
+					<td style="padding: 12px; text-align: right; font-weight: 600;">{% widthratio item.price 1 item.quantity %} ₽</td>
+				</tr>
+				{% endfor %}
+				<tr style="border-top: 2px solid #e5e7eb;">
+					<td colspan="3" style="padding: 12px; text-align: right; font-weight: 600;">Итого:</td>
+					<td style="padding: 12px; text-align: right; font-size: 1.1em; font-weight: 600; color: #2563eb;">
+						{{ order.total_amount }} ₽
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	
+	<!-- Адрес доставки -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+		<h2 style="margin: 0 0 15px 0;">Адрес доставки</h2>
+		<p style="margin: 0;"><strong>Город:</strong> {{ order.shipping_city }}</p>
+		<p style="margin: 5px 0;"><strong>Адрес:</strong> {{ order.shipping_address }}</p>
+		{% if order.shipping_postal_code %}
+		<p style="margin: 5px 0;"><strong>Индекс:</strong> {{ order.shipping_postal_code }}</p>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}
+

@@ -15,7 +15,7 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 
 class InventorySerializer(serializers.ModelSerializer):
-    available = serializers.IntegerField(read_only=True, source='available')
+    available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Inventory

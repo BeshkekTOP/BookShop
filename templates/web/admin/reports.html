@@ -1,0 +1,121 @@
+{% extends 'web/base.html' %}
+{% block title %}Отчеты{% endblock %}
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+	<h1>📊 Отчеты</h1>
+	
+	<!-- Информация о системе отчетов -->
+	<div style="background: #e0f2fe; border: 1px solid #0ea5e9; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+		<h2 style="margin: 0 0 10px 0; color: #0c4a6e;">💡 Система отчетов</h2>
+		<p style="margin: 0; color: #0c4a6e;">Выберите тип отчета для просмотра или экспорта в CSV. Все отчеты генерируются на основе актуальных данных из базы.</p>
+	</div>
+	
+	<!-- Выбор типа отчета -->
+	<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 30px;">
+		
+		<!-- Топ-10 книг -->
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 25px; text-align: center;">
+			<div style="font-size: 3em; margin-bottom: 15px;">📚</div>
+			<h3 style="margin: 0 0 10px 0; color: #1f2937;">Топ-10 книг</h3>
+			<p style="margin: 0 0 20px 0; color: #6b7280; font-size: 0.9em;">
+				Самые популярные книги по количеству заказов, продажам и выручке
+			</p>
+			<div style="display: flex; gap: 10px; justify-content: center;">
+				<a href="/admin/reports/top-books/" class="btn" style="background: #2563eb;">
+					👁️ Просмотреть
+				</a>
+				<a href="/admin/reports/export/?type=top_books" class="btn" style="background: #10b981;">
+					📥 Экспорт CSV
+				</a>
+			</div>
+		</div>
+		
+		<!-- Активность пользователей -->
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 25px; text-align: center;">
+			<div style="font-size: 3em; margin-bottom: 15px;">👥</div>
+			<h3 style="margin: 0 0 10px 0; color: #1f2937;">Активность пользователей</h3>
+			<p style="margin: 0 0 20px 0; color: #6b7280; font-size: 0.9em;">
+				Статистика по заказам, покупкам и активности пользователей
+			</p>
+			<div style="display: flex; gap: 10px; justify-content: center;">
+				<a href="/admin/reports/user-activity/" class="btn" style="background: #2563eb;">
+					👁️ Просмотреть
+				</a>
+				<a href="/admin/reports/export/?type=user_activity" class="btn" style="background: #10b981;">
+					📥 Экспорт CSV
+				</a>
+			</div>
+		</div>
+		
+		<!-- Комбинированный отчет -->
+		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 25px; text-align: center;">
+			<div style="font-size: 3em; margin-bottom: 15px;">📈</div>
+			<h3 style="margin: 0 0 10px 0; color: #1f2937;">Комбинированный отчет</h3>
+			<p style="margin: 0 0 20px 0; color: #6b7280; font-size: 0.9em;">
+				Полный отчет включающий топ-книги и активность пользователей
+			</p>
+			<div style="display: flex; gap: 10px; justify-content: center;">
+				<a href="/admin/reports/export/?type=combined" class="btn" style="background: #7c3aed;">
+					📥 Экспорт CSV
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Быстрые действия -->
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+		<h2 style="margin: 0 0 15px 0;">🚀 Быстрые действия</h2>
+		<div style="display: flex; gap: 15px; flex-wrap: wrap;">
+			<a href="/admin/dashboard/" class="btn" style="background: #6b7280;">
+				← Назад к панели
+			</a>
+			<a href="/admin/inventory/" class="btn" style="background: #f59e0b;">
+				📦 Управление остатками
+			</a>
+			<a href="/admin/users/" class="btn" style="background: #8b5cf6;">
+				👥 Управление пользователями
+			</a>
+		</div>
+	</div>
+	
+	<!-- Информация о форматах -->
+	<div style="background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 20px; margin-top: 20px;">
+		<h3 style="margin: 0 0 10px 0; color: #374151;">ℹ️ Информация о форматах</h3>
+		<ul style="margin: 0; padding-left: 20px; color: #6b7280;">
+			<li><strong>CSV файлы</strong> содержат данные в формате, совместимом с Excel и Google Sheets</li>
+			<li><strong>Кодировка UTF-8</strong> обеспечивает корректное отображение русских символов</li>
+			<li><strong>Автоматическое именование</strong> файлов с указанием даты и времени создания</li>
+			<li><strong>Комбинированный отчет</strong> включает все данные в одном файле для удобства анализа</li>
+		</ul>
+	</div>
+</div>
+
+<style>
+.btn {
+	display: inline-block;
+	padding: 10px 20px;
+	color: white;
+	text-decoration: none;
+	border-radius: 6px;
+	font-weight: 600;
+	transition: all 0.2s;
+	border: none;
+	cursor: pointer;
+}
+
+.btn:hover {
+	transform: translateY(-1px);
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+	transform: translateY(0);
+}
+</style>
+{% endblock %}
+
+
+
+
+
+

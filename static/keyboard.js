@@ -37,9 +37,6 @@ const KeyboardShortcuts = {
                 this.showNotification(`Выполнено: ${shortcut.description}`);
             }
         });
-        
-        // Показываем подсказку при первом запуске
-        this.showHelp();
     },
     
     // Показ уведомления
@@ -70,7 +67,9 @@ const KeyboardShortcuts = {
     
     // Показ справки по горячим клавишам
     showHelp() {
-        if (sessionStorage.getItem('keyboard_help_shown') === 'true') return;
+        // Удаляем предыдущее модальное окно, если есть
+        const existing = document.getElementById('keyboard-help');
+        if (existing) existing.remove();
         
         const helpModal = document.createElement('div');
         helpModal.id = 'keyboard-help';
@@ -89,29 +88,51 @@ const KeyboardShortcuts = {
         
         const helpContent = document.createElement('div');
         helpContent.style.cssText = `
-            background: white;
+            background: var(--card);
+            color: var(--text);
             padding: 24px;
             border-radius: 12px;
             max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
             box-shadow: var(--shadow);
+            border: 1px solid var(--border);
         `;
         
-        let html = '<h2>Горячие клавиши</h2><ul style="list-style:none;padding:0">';
+        let html = '<h2 style="margin-top:0; margin-bottom: 16px;">⌨️ Горячие клавиши</h2><ul style="list-style:none;padding:0; margin:0">';
         this.shortcuts.forEach(s => {
-            html += `<li style="padding:8px;border-bottom:1px solid var(--border)">
-                <strong>${s.combo}</strong> - ${s.description}
+            // Определяем платформу пользователя
+            const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+            
+            // Заменяем ключи для читаемости
+            let keyDisplay = s.combo.replace(/\+/g, ' + ')
+                .replace('ctrl', isMac ? 'Cmd' : 'Ctrl')
+                .replace('alt', 'Alt')
+                .replace('shift', 'Shift');
+            
+            html += `<li style="padding:12px 8px;border-bottom:1px solid var(--border); display: flex; justify-content: space-between;">
+                <span>${s.description}</span>
+                <kbd style="padding: 4px 8px; background: var(--bg); border: 1px solid var(--border); border-radius: 4px; font-family: monospace; font-size: 0.9em;">${keyDisplay}</kbd>
             </li>`;
         });
         html += '</ul>';
-        html += '<button onclick="this.closest(\'#keyboard-help\').remove()" class="btn" style="margin-top:16px;width:100%">Понятно</button>';
+        html += '<button onclick="this.closest(\'#keyboard-help\').remove()" class="btn" style="margin-top:16px;width:100%">✕ Закрыть</button>';
         
         helpContent.innerHTML = html;
         helpModal.appendChild(helpContent);
         document.body.appendChild(helpModal);
         
-        sessionStorage.setItem('keyboard_help_shown', 'true');
+        // Закрытие по клику вне окна
+        helpModal.addEventListener('click', (e) => {
+            if (e.target === helpModal) {
+                helpModal.remove();
+            }
+        });
     }
 };
+
+// Экспортируем глобально для доступа из base.html
+window.KeyboardShortcuts = KeyboardShortcuts;
 
 // Регистрация горячих клавиш
 document.addEventListener('DOMContentLoaded', () => {
@@ -154,12 +175,8 @@ document.addEventListener('DOMContentLoaded', () => {
         modals.forEach(modal => modal.remove());
     }, 'Закрыть окно');
     
-    // 8. Ctrl+K или Cmd+K - Показать подсказки
+    // 8. Ctrl+K (Windows) или Cmd+K (Mac) - Показать подсказки
     KeyboardShortcuts.register('ctrl+k', () => {
-        KeyboardShortcuts.showHelp();
-    }, 'Показать горячие клавиши');
-    
-    KeyboardShortcuts.register('ctrl+meta+k', () => {
         KeyboardShortcuts.showHelp();
     }, 'Показать горячие клавиши');
     
@@ -174,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
         KeyboardShortcuts.showHelp();
     }, 'Показать справку');
     
-    // Инициализация
+    // Инициализация БЕЗ автоматического показа подсказок
     KeyboardShortcuts.init();
 });
 
@@ -191,4 +208,3 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
-

@@ -1,0 +1,105 @@
+{% extends 'web/base.html' %}
+{% block title %}Заказы{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>📋 Управление заказами</h1>
+	
+	<!-- Фильтры -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">🔍 Фильтры</h2>
+		<form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Статус:</label>
+				<select name="status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+					{% for value, label in status_choices %}
+					<option value="{{ value }}" {% if value == current_status %}selected{% endif %}>{{ label }}</option>
+					{% endfor %}
+				</select>
+			</div>
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Дата от:</label>
+				<input type="date" name="date_from" value="{{ date_from }}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+			</div>
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Дата до:</label>
+				<input type="date" name="date_to" value="{{ date_to }}" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+			</div>
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Поиск:</label>
+				<input type="text" name="search" value="{{ search }}" placeholder="№ заказа, клиент, адрес..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+			</div>
+			<div style="display: flex; gap: 10px;">
+				<button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+					🔍 Применить
+				</button>
+				<a href="/manager/orders/" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block;">
+					🔄 Сбросить
+				</a>
+			</div>
+		</form>
+	</div>
+	
+	<!-- Список заказов -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+			<h2 style="margin: 0;">Заказы ({{ orders|length }})</h2>
+			<a href="/manager/" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none;">
+				← Назад к панели
+			</a>
+		</div>
+		
+		{% if orders %}
+		<div style="overflow-x: auto;">
+			<table style="width: 100%; border-collapse: collapse;">
+				<thead style="background: #f9fafb;">
+					<tr>
+						<th style="padding: 12px; text-align: left;">№ Заказа</th>
+						<th style="padding: 12px; text-align: left;">Клиент</th>
+						<th style="padding: 12px; text-align: right;">Сумма</th>
+						<th style="padding: 12px; text-align: center;">Статус</th>
+						<th style="padding: 12px; text-align: left;">Дата создания</th>
+						<th style="padding: 12px; text-align: center;">Действия</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for order in orders %}
+					<tr style="border-top: 1px solid #e5e7eb;">
+						<td style="padding: 12px; font-weight: 600;">#{{ order.id }}</td>
+						<td style="padding: 12px;">
+							<div>
+								<strong>{{ order.user.username }}</strong><br>
+								<small style="color: #6b7280;">{{ order.user.email|default:"—" }}</small>
+							</div>
+						</td>
+						<td style="padding: 12px; text-align: right; font-weight: 600;">{{ order.total_amount }} ₽</td>
+						<td style="padding: 12px; text-align: center;">
+							<span style="padding: 6px 12px; border-radius: 4px; font-size: 0.9em; font-weight: 600;
+								{% if order.status == 'new' %}background: #fef3c7; color: #92400e;
+								{% elif order.status == 'processing' %}background: #e0e7ff; color: #3730a3;
+								{% elif order.status == 'shipped' %}background: #dbeafe; color: #1e40af;
+								{% elif order.status == 'delivered' %}background: #dcfce7; color: #166534;
+								{% elif order.status == 'cancelled' %}background: #fee2e2; color: #991b1b;
+								{% endif %}">
+								{{ order.get_status_display }}
+							</span>
+						</td>
+						<td style="padding: 12px;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+						<td style="padding: 12px; text-align: center;">
+							<a href="/manager/orders/{{ order.id }}/" style="background: #2563eb; color: white; padding: 6px 12px; border: none; border-radius: 4px; text-decoration: none; font-size: 0.9em;">
+								👁️ Просмотр
+							</a>
+						</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<div style="text-align: center; padding: 40px; color: #6b7280;">
+			<p style="margin: 0; font-size: 1.1em;">Заказы не найдены</p>
+			<p style="margin: 10px 0 0 0;">Попробуйте изменить параметры фильтрации</p>
+		</div>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

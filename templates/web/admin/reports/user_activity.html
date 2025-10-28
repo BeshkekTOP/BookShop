@@ -1,0 +1,60 @@
+{% extends 'web/base.html' %}
+{% block title %}Активность пользователей{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>👤 Активность пользователей</h1>
+	
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 20px;">
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Пользователь</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Роль</th>
+					<th style="padding: 12px; text-align: center; font-weight: 600;">Заказов</th>
+					<th style="padding: 12px; text-align: right; font-weight: 600;">Потрачено</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for user in active_users %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px;"><strong>{{ user.username }}</strong></td>
+					<td style="padding: 12px;">{{ user.email|default:"—" }}</td>
+					<td style="padding: 12px; text-align: center;">
+						{% if user.profile %}
+							<span style="padding: 4px 8px; border-radius: 4px; font-size: 0.85em;
+								{% if user.profile.role == 'admin' %}background: #fee2e2; color: #991b1b;
+								{% elif user.profile.role == 'manager' %}background: #dbeafe; color: #1e40af;
+								{% else %}background: #dcfce7; color: #166534;{% endif %}">
+								{{ user.profile.get_role_display }}
+							</span>
+						{% else %}
+							<span style="color: #6b7280;">—</span>
+						{% endif %}
+					</td>
+					<td style="padding: 12px; text-align: center; font-weight: 600; color: #2563eb;">{{ user.total_orders|default:0 }}</td>
+					<td style="padding: 12px; text-align: right; font-weight: 600; color: #10b981;">{{ user.total_spent|floatformat:0 }} ₽</td>
+				</tr>
+				{% empty %}
+				<tr>
+					<td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
+						Активных пользователей нет
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

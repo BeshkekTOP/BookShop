@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.safestring import mark_safe
 from .models import Category, Author, Book, BookAuthors, Inventory
 
 
@@ -26,7 +27,14 @@ class BookAdmin(admin.ModelAdmin):
     search_fields = ("title", "isbn", "description")
     list_filter = ("category", "is_active", "created_at", "publication_date")
     inlines = [BookAuthorsInline]
-    readonly_fields = ("created_at", "updated_at", "average_rating")
+    readonly_fields = ("created_at", "updated_at", "average_rating", "cover_image_preview")
+    
+    def cover_image_preview(self, obj):
+        if obj.cover_image:
+            return mark_safe(f'<img src="{obj.cover_image.url}" style="max-width: 200px; max-height: 300px;" />')
+        return "Нет изображения"
+    cover_image_preview.short_description = "Предпросмотр обложки"
+    
     fieldsets = (
         ("Основная информация", {
             "fields": ("title", "isbn", "description", "category")
@@ -34,8 +42,12 @@ class BookAdmin(admin.ModelAdmin):
         ("Цена и рейтинг", {
             "fields": ("price", "rating", "average_rating")
         }),
+        ("Обложка книги", {
+            "fields": ("cover_image_preview", "cover_image"),
+            "description": "Загрузите изображение обложки книги"
+        }),
         ("Дополнительная информация", {
-            "fields": ("pages", "publication_date", "cover_image")
+            "fields": ("pages", "publication_date")
         }),
         ("Статус", {
             "fields": ("is_active",)

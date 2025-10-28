@@ -1,0 +1,247 @@
+{% extends 'web/base.html' %}
+{% load static %}
+{% block title %}Статистика продаж{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>📊 Статистика продаж</h1>
+	
+	<!-- Фильтр периода -->
+	<div class="card" style="margin-bottom: 20px;">
+		<h2 style="margin: 0 0 15px 0;">📅 Период анализа</h2>
+		<form method="get" style="display: flex; gap: 15px; align-items: end;">
+			<div>
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Период:</label>
+				<select name="period" style="padding: 8px; border: 1px solid var(--border); border-radius: 6px;">
+					<option value="week" {% if period == 'week' %}selected{% endif %}>За неделю</option>
+					<option value="month" {% if period == 'month' %}selected{% endif %}>За месяц</option>
+					<option value="quarter" {% if period == 'quarter' %}selected{% endif %}>За квартал</option>
+				</select>
+			</div>
+			<button type="submit" class="btn">🔍 Применить</button>
+		</form>
+		<p style="margin: 10px 0 0 0; color: var(--muted); font-size: 0.9em;">
+			Период: с {{ start_date|date:"d.m.Y" }} по сегодня
+		</p>
+	</div>
+	
+	<!-- Общая статистика -->
+	<div class="grid" style="margin-bottom: 30px;">
+		<div class="card">
+			<h3 style="margin: 0 0 10px 0; color: var(--muted);">Всего заказов</h3>
+			<p style="font-size: 2.5em; margin: 0; color: var(--primary); font-weight: bold;">{{ total_orders }}</p>
+		</div>
+		<div class="card">
+			<h3 style="margin: 0 0 10px 0; color: var(--muted);">Общая выручка</h3>
+			<p style="font-size: 2.5em; margin: 0; color: #10b981; font-weight: bold;">{{ total_revenue|floatformat:0 }} ₽</p>
+		</div>
+		<div class="card">
+			<h3 style="margin: 0 0 10px 0; color: var(--muted);">Средний чек</h3>
+			<p style="font-size: 2.5em; margin: 0; color: #f59e0b; font-weight: bold;">
+				{% if total_orders > 0 %}{{ avg_order_value|floatformat:0 }}{% else %}0{% endif %} ₽
+			</p>
+		</div>
+	</div>
+	
+	<!-- График динамики продаж -->
+	<div class="card" style="margin-bottom: 30px;">
+		<h2 style="margin: 0 0 20px 0;">📈 Динамика продаж по дням</h2>
+		{% if daily_stats %}
+		<div style="height: 400px;">
+			<canvas id="dailyStatsChart"></canvas>
+		</div>
+		{% else %}
+		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за выбранный период</p>
+		{% endif %}
+	</div>
+	
+	<!-- Круговая диаграмма по статусам -->
+	<div class="card" style="margin-bottom: 30px;">
+		<h2 style="margin: 0 0 20px 0;">🍰 Распределение заказов по статусам</h2>
+		{% if status_stats %}
+		<div style="max-width: 400px; height: 400px; margin: 0 auto;">
+			<canvas id="statusChart"></canvas>
+		</div>
+		{% else %}
+		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за выбранный период</p>
+		{% endif %}
+	</div>
+	
+	<!-- Топ-10 книг -->
+	<div class="card" style="margin-bottom: 30px;">
+		<h2 style="margin: 0 0 20px 0;">📚 Топ-10 книг за период</h2>
+		{% if top_books %}
+		<div style="overflow-x: auto;">
+			<table style="width: 100%; border-collapse: collapse;">
+				<thead style="background: var(--bg);">
+					<tr>
+						<th style="padding: 12px; text-align: left;">Позиция</th>
+						<th style="padding: 12px; text-align: left;">Название книги</th>
+						<th style="padding: 12px; text-align: center;">Заказов</th>
+						<th style="padding: 12px; text-align: center;">Продано</th>
+						<th style="padding: 12px; text-align: right;">Выручка</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for book in top_books %}
+					<tr style="border-top: 1px solid var(--border);">
+						<td style="padding: 12px; text-align: center; font-weight: 600; color: var(--muted);">{{ forloop.counter }}</td>
+						<td style="padding: 12px;">
+							<div>
+								<strong>{{ book.title }}</strong><br>
+								<small style="color: var(--muted);">ISBN: {{ book.isbn }}</small>
+							</div>
+						</td>
+						<td style="padding: 12px; text-align: center; font-weight: 600;">{{ book.orders_count }}</td>
+						<td style="padding: 12px; text-align: center; font-weight: 600;">{{ book.quantity_sold|default:0 }}</td>
+						<td style="padding: 12px; text-align: right; font-weight: 600; color: #10b981;">{{ book.revenue|floatformat:0|default:0 }} ₽</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за выбранный период</p>
+		{% endif %}
+	</div>
+	
+	<!-- Навигация -->
+	<div style="display: flex; gap: 10px;">
+		<a href="/manager/" class="btn btn-ghost">← Назад к панели</a>
+		<a href="/manager/orders/" class="btn">📋 Заказы</a>
+	</div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	console.log('Chart.js loaded:', typeof Chart !== 'undefined');
+	{% if daily_stats %}
+	console.log('Daily stats count:', {{ daily_stats|length }});
+	// График динамики продаж
+	const dailyCtx = document.getElementById('dailyStatsChart').getContext('2d');
+	const dailyData = {
+		labels: [
+			{% for stat in daily_stats %}
+			'{{ stat.day|date:"M d" }}'{% if not forloop.last %},{% endif %}
+			{% endfor %}
+		],
+		datasets: [{
+			label: 'Заказы',
+			data: [
+				{% for stat in daily_stats %}
+				{{ stat.orders|default:0 }}{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			borderColor: 'rgb(37, 99, 235)',
+			backgroundColor: 'rgba(37, 99, 235, 0.1)',
+			tension: 0.4,
+			fill: true
+		}, {
+			label: 'Выручка (₽)',
+			data: [
+				{% for stat in daily_stats %}
+				{% if stat.revenue %}{{ stat.revenue|floatformat:0 }}{% else %}0{% endif %}{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			borderColor: 'rgb(16, 185, 129)',
+			backgroundColor: 'rgba(16, 185, 129, 0.1)',
+			tension: 0.4,
+			fill: true,
+			yAxisID: 'y1'
+		}]
+	};
+	
+	new Chart(dailyCtx, {
+		type: 'line',
+		data: dailyData,
+		options: {
+			responsive: true,
+			maintainAspectRatio: true,
+			plugins: {
+				legend: {
+					display: true,
+					position: 'top'
+				}
+			},
+			scales: {
+				y: {
+					beginAtZero: true,
+					title: {
+						display: true,
+						text: 'Количество заказов'
+					}
+				},
+				y1: {
+					beginAtZero: true,
+					position: 'right',
+					title: {
+						display: true,
+						text: 'Выручка (₽)'
+					},
+					grid: {
+						drawOnChartArea: false
+					}
+				}
+			}
+		}
+	});
+	{% endif %}
+	
+	{% if status_stats %}
+	console.log('Status stats count:', {{ status_stats|length }});
+	// Круговая диаграмма по статусам
+	const statusCtx = document.getElementById('statusChart').getContext('2d');
+	const statusData = {
+		labels: [
+			{% for stat in status_stats %}
+			{% if stat.status == 'new' %}Новый
+			{% elif stat.status == 'processing' %}В обработке
+			{% elif stat.status == 'shipped' %}Отправлен
+			{% elif stat.status == 'delivered' %}Доставлен
+			{% elif stat.status == 'cancelled' %}Отменен
+			{% else %}{{ stat.status }}{% endif %}{% if not forloop.last %},{% endif %}
+			{% endfor %}
+		],
+		datasets: [{
+			data: [
+				{% for stat in status_stats %}
+				{{ stat.count }}{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			backgroundColor: [
+				'rgba(254, 243, 199, 0.8)',
+				'rgba(224, 231, 255, 0.8)',
+				'rgba(219, 234, 254, 0.8)',
+				'rgba(220, 252, 231, 0.8)',
+				'rgba(254, 226, 226, 0.8)'
+			],
+			borderColor: [
+				'rgb(146, 64, 14)',
+				'rgb(55, 48, 163)',
+				'rgb(30, 64, 175)',
+				'rgb(22, 101, 52)',
+				'rgb(153, 27, 27)'
+			],
+			borderWidth: 2
+		}]
+	};
+	
+	new Chart(statusCtx, {
+		type: 'doughnut',
+		data: statusData,
+		options: {
+			responsive: true,
+			maintainAspectRatio: true,
+			plugins: {
+				legend: {
+					position: 'bottom'
+				}
+			}
+		}
+	});
+	{% endif %}
+});
+</script>
+{% endblock %}

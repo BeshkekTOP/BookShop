@@ -1,0 +1,107 @@
+{% extends 'web/base.html' %}
+{% block title %}Логи активности - {{ user.username }}{% endblock %}
+{% block content %}
+<div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
+	<h1>📊 Логи активности: {{ user.username }}</h1>
+	
+	<!-- Информация о пользователе -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<div style="display: flex; gap: 20px; align-items: center;">
+			<div>
+				<h2 style="margin: 0 0 5px 0;">{{ user.username }}</h2>
+				<p style="margin: 0; color: #6b7280;">{{ user.email|default:"—" }}</p>
+			</div>
+			<div style="margin-left: auto;">
+				<a href="/admin/users/{{ user.id }}/" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block;">
+					← Назад к пользователю
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Логи активности -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 20px 0;">Последние 50 действий</h2>
+		
+		{% if logs %}
+		<div style="overflow-x: auto;">
+			<table style="width: 100%; border-collapse: collapse;">
+				<thead style="background: #f9fafb;">
+					<tr>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Дата/Время</th>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Действие</th>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Объект</th>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">IP адрес</th>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb;">Путь</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for log in logs %}
+					<tr style="border-bottom: 1px solid #f3f4f6;">
+						<td style="padding: 12px; font-size: 0.9em; color: #6b7280;">
+							{{ log.created_at|date:"d.m.Y H:i:s" }}
+						</td>
+						<td style="padding: 12px;">
+							<span style="padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: 600;
+								{% if log.action == 'created' %}background: #dcfce7; color: #166534;
+								{% elif log.action == 'updated' %}background: #dbeafe; color: #1e40af;
+								{% elif log.action == 'deleted' %}background: #fee2e2; color: #991b1b;
+								{% elif log.action == 'viewed' %}background: #f3f4f6; color: #6b7280;
+								{% else %}background: #fef3c7; color: #92400e;{% endif %}">
+								{{ log.get_action_display }}
+							</span>
+						</td>
+						<td style="padding: 12px; font-size: 0.9em;">
+							{% if log.content_object %}
+								{{ log.content_object }}
+							{% elif log.object_id %}
+								ID: {{ log.object_id }}
+							{% else %}
+								—
+							{% endif %}
+						</td>
+						<td style="padding: 12px; font-size: 0.9em; color: #6b7280;">
+							{{ log.ip_address|default:"—" }}
+						</td>
+						<td style="padding: 12px; font-size: 0.9em; color: #6b7280; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+							{{ log.path|default:"—" }}
+						</td>
+					</tr>
+					{% if log.old_data or log.new_data %}
+					<tr style="background: #f9fafb;">
+						<td colspan="5" style="padding: 12px;">
+							<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+								{% if log.old_data %}
+								<div>
+									<strong style="color: #ef4444; font-size: 0.9em;">Старые данные:</strong>
+									<pre style="background: #fef2f2; padding: 8px; border-radius: 4px; font-size: 0.8em; margin: 5px 0 0 0; overflow-x: auto;">{{ log.old_data|pprint }}</pre>
+								</div>
+								{% endif %}
+								{% if log.new_data %}
+								<div>
+									<strong style="color: #10b981; font-size: 0.9em;">Новые данные:</strong>
+									<pre style="background: #f0fdf4; padding: 8px; border-radius: 4px; font-size: 0.8em; margin: 5px 0 0 0; overflow-x: auto;">{{ log.new_data|pprint }}</pre>
+								</div>
+								{% endif %}
+							</div>
+						</td>
+					</tr>
+					{% endif %}
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+		<div style="text-align: center; padding: 40px; color: #6b7280;">
+			<p style="margin: 0; font-size: 1.1em;">Нет записей активности</p>
+		</div>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+

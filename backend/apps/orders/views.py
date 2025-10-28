@@ -1,6 +1,6 @@
 from decimal import Decimal
 from django.db import transaction
-from rest_framework import permissions, status, views, viewsets
+from rest_framework import permissions, status, views, viewsets, filters
 from rest_framework.response import Response
 
 from backend.apps.catalog.models import Inventory, Book
@@ -51,9 +51,24 @@ class CartView(views.APIView):
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = (permissions.IsAuthenticated,)
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['created_at', 'total_amount', 'status']
+    ordering = ['-created_at']
 
     def get_queryset(self):
-        return Order.objects.filter(user=self.request.user).order_by("-created_at")
+        queryset = Order.objects.filter(user=self.request.user).order_by("-created_at")
+        
+        # Администраторы могут видеть все заказы
+        if self.request.user.is_staff:
+            queryset = Order.objects.all().order_by("-created_at")
+            
+        return queryset
+
+    def get_permissions(self):
+        # Для обновления и удаления нужны особые права
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
 
     @transaction.atomic
     def create(self, request, *args, **kwargs):
@@ -65,11 +80,18 @@ class OrderViewSet(viewsets.ModelViewSet):
         # Stock check
         for item in cart.items.all():
             inv = Inventory.objects.select_for_update().get(book=item.book)
-            if inv.available() < item.quantity:
+            if inv.available < item.quantity:
                 return Response({"detail": f"Not enough stock for {item.book.title}"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Create order
-        order = Order.objects.create(user=user, status="processing", total_amount=Decimal("0"))
+        order = Order.objects.create(
+            user=user, 
+            status="processing", 
+            total_amount=Decimal("0"),
+            shipping_address=request.data.get('shipping_address', ''),
+            shipping_city=request.data.get('shipping_city', ''),
+            notes=request.data.get('notes', '')
+        )
         total = Decimal("0")
         for item in cart.items.all():
             price = item.book.price

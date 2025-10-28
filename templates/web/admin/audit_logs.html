@@ -1,0 +1,81 @@
+{% extends 'web/base.html' %}
+{% block title %}Логи действий{% endblock %}
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+	<h1>📝 Логи действий</h1>
+	
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 20px; overflow-x: auto;">
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Дата/Время</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Действие</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Пользователь</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Изменение</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">IP</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for log in logs %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px; color: #6b7280; white-space: nowrap;">
+						{{ log.created_at|date:"d.m.Y H:i:s" }}
+					</td>
+					<td style="padding: 12px;">
+						{% if log.action == 'created' %}
+							<span style="color: #10b981; font-weight: 600;">🆕 Создано</span>
+						{% elif log.action == 'updated' %}
+							<span style="color: #2563eb; font-weight: 600;">✏️ Обновлено</span>
+						{% elif log.action == 'deleted' %}
+							<span style="color: #ef4444; font-weight: 600;">🗑️ Удалено</span>
+						{% else %}
+							<span style="color: #6b7280;">{{ log.get_action_display }}</span>
+						{% endif %}
+					</td>
+					<td style="padding: 12px;">
+						{% if log.actor %}
+							<strong>{{ log.actor.username }}</strong>
+						{% else %}
+							<span style="color: #6b7280;">Система</span>
+						{% endif %}
+					</td>
+					<td style="padding: 12px;">
+						{% if log.old_data and log.new_data %}
+							<details style="cursor: pointer;">
+								<summary style="color: #2563eb;">Подробности</summary>
+								<div style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 4px; font-size: 0.85em;">
+									<div style="margin-bottom: 4px;"><strong>Было:</strong> {{ log.old_data }}</div>
+									<div><strong>Стало:</strong> {{ log.new_data }}</div>
+								</div>
+							</details>
+						{% else %}
+							—
+						{% endif %}
+					</td>
+					<td style="padding: 12px; color: #6b7280; font-family: monospace; font-size: 0.9em;">
+						{{ log.ip_address|default:"—" }}
+					</td>
+				</tr>
+				{% empty %}
+				<tr>
+					<td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
+						Логов пока нет
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+

@@ -9,8 +9,8 @@ from rest_framework import filters
 import csv
 
 from backend.apps.orders.models import OrderItem
-from .models import PageView, BookView, SearchQuery, PurchaseEvent
-from .serializers import PageViewSerializer, BookViewSerializer, SearchQuerySerializer, PurchaseEventSerializer
+# from .models import PageView, BookView, SearchQuery, PurchaseEvent  # Временно отключено
+# from .serializers import PageViewSerializer, BookViewSerializer, SearchQuerySerializer, PurchaseEventSerializer  # Временно отключено
 
 
 class SalesStatsView(views.APIView):
@@ -55,47 +55,48 @@ class TopBooksView(views.APIView):
         return Response(list(qs))
 
 
-class PageViewViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = PageView.objects.all()
-    serializer_class = PageViewSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['user', 'path']
-    search_fields = ['path', 'user_agent']
-    ordering_fields = ['timestamp']
-    ordering = ['-timestamp']
+# Временно отключено - требуется восстановление старых моделей
+# class PageViewViewSet(viewsets.ReadOnlyModelViewSet):
+#     permission_classes = (permissions.IsAdminUser,)
+#     queryset = PageView.objects.all()
+#     serializer_class = PageViewSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+#     filterset_fields = ['user', 'path']
+#     search_fields = ['path', 'user_agent']
+#     ordering_fields = ['timestamp']
+#     ordering = ['-timestamp']
 
 
-class BookViewViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = BookView.objects.select_related('book').all()
-    serializer_class = BookViewSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['user', 'book']
-    search_fields = ['book__title']
-    ordering_fields = ['timestamp']
-    ordering = ['-timestamp']
+# class BookViewViewSet(viewsets.ReadOnlyModelViewSet):
+#     permission_classes = (permissions.IsAdminUser,)
+#     queryset = BookView.objects.select_related('book').all()
+#     serializer_class = BookViewSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+#     filterset_fields = ['user', 'book']
+#     search_fields = ['book__title']
+#     ordering_fields = ['timestamp']
+#     ordering = ['-timestamp']
 
 
-class SearchQueryViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = SearchQuery.objects.all()
-    serializer_class = SearchQuerySerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['user']
-    search_fields = ['query']
-    ordering_fields = ['timestamp']
-    ordering = ['-timestamp']
+# class SearchQueryViewSet(viewsets.ReadOnlyModelViewSet):
+#     permission_classes = (permissions.IsAdminUser,)
+#     queryset = SearchQuery.objects.all()
+#     serializer_class = SearchQuerySerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+#     filterset_fields = ['user']
+#     search_fields = ['query']
+#     ordering_fields = ['timestamp']
+#     ordering = ['-timestamp']
 
 
-class PurchaseEventViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = (permissions.IsAdminUser,)
-    queryset = PurchaseEvent.objects.select_related('user', 'order').all()
-    serializer_class = PurchaseEventSerializer
-    filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['user']
-    ordering_fields = ['timestamp', 'total_amount']
-    ordering = ['-timestamp']
+# class PurchaseEventViewSet(viewsets.ReadOnlyModelViewSet):
+#     permission_classes = (permissions.IsAdminUser,)
+#     queryset = PurchaseEvent.objects.select_related('user', 'order').all()
+#     serializer_class = PurchaseEventSerializer
+#     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+#     filterset_fields = ['user']
+#     ordering_fields = ['timestamp', 'total_amount']
+#     ordering = ['-timestamp']
 
 
 class DashboardStatsView(views.APIView):

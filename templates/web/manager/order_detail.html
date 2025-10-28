@@ -1,0 +1,183 @@
+{% extends 'web/base.html' %}
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+	<h1>📋 Заказ #{{ order.id }}</h1>
+	
+	<!-- Информация о заказе -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+			<div>
+				<h2 style="margin: 0 0 15px 0;">Информация о заказе</h2>
+				<table style="width: 100%;">
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280; width: 150px;">Номер заказа:</td>
+						<td style="padding: 8px 0; font-weight: 600;">#{{ order.id }}</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Статус:</td>
+						<td style="padding: 8px 0;">
+							<span style="padding: 6px 12px; border-radius: 4px; font-weight: 600;
+								{% if order.status == 'new' %}background: #fef3c7; color: #92400e;
+								{% elif order.status == 'processing' %}background: #e0e7ff; color: #3730a3;
+								{% elif order.status == 'shipped' %}background: #dbeafe; color: #1e40af;
+								{% elif order.status == 'delivered' %}background: #dcfce7; color: #166534;
+								{% elif order.status == 'cancelled' %}background: #fee2e2; color: #991b1b;
+								{% endif %}">
+								{{ order.get_status_display }}
+							</span>
+						</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Дата создания:</td>
+						<td style="padding: 8px 0;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Общая сумма:</td>
+						<td style="padding: 8px 0; font-weight: 600; font-size: 1.2em; color: #10b981;">{{ order.total_amount }} ₽</td>
+					</tr>
+					{% if order.cancel_reason %}
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Причина отмены:</td>
+						<td style="padding: 8px 0; color: #ef4444;">{{ order.cancel_reason }}</td>
+					</tr>
+					{% endif %}
+				</table>
+			</div>
+			
+			<div>
+				<h2 style="margin: 0 0 15px 0;">Информация о клиенте</h2>
+				<table style="width: 100%;">
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280; width: 150px;">Имя пользователя:</td>
+						<td style="padding: 8px 0; font-weight: 600;">{{ order.user.username }}</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Email:</td>
+						<td style="padding: 8px 0;">{{ order.user.email|default:"—" }}</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">ФИО:</td>
+						<td style="padding: 8px 0;">{{ order.user.first_name }} {{ order.user.last_name }}</td>
+					</tr>
+					<tr>
+						<td style="padding: 8px 0; color: #6b7280;">Телефон:</td>
+						<td style="padding: 8px 0;">{{ order.phone|default:"—" }}</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+	
+	<!-- Адрес доставки -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">📍 Адрес доставки</h2>
+		<div style="background: #f9fafb; padding: 15px; border-radius: 6px;">
+			<p style="margin: 0; white-space: pre-line;">{{ order.shipping_address }}</p>
+		</div>
+	</div>
+	
+	<!-- Состав заказа -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">📚 Состав заказа</h2>
+		<div style="overflow-x: auto;">
+			<table style="width: 100%; border-collapse: collapse;">
+				<thead style="background: #f9fafb;">
+					<tr>
+						<th style="padding: 12px; text-align: left;">Книга</th>
+						<th style="padding: 12px; text-align: center;">Количество</th>
+						<th style="padding: 12px; text-align: right;">Цена за шт.</th>
+						<th style="padding: 12px; text-align: right;">Сумма</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for item in order_items %}
+					<tr style="border-top: 1px solid #e5e7eb;">
+						<td style="padding: 12px;">
+							<div>
+								<strong>{{ item.book.title }}</strong><br>
+								<small style="color: #6b7280;">{{ item.book.author.name }} • ISBN: {{ item.book.isbn }}</small>
+							</div>
+						</td>
+						<td style="padding: 12px; text-align: center;">{{ item.quantity }}</td>
+						<td style="padding: 12px; text-align: right;">{{ item.price }} ₽</td>
+						<td style="padding: 12px; text-align: right; font-weight: 600;">{% widthratio item.price 1 item.quantity %} ₽</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+				<tfoot style="background: #f9fafb; font-weight: 600;">
+					<tr>
+						<td colspan="3" style="padding: 12px; text-align: right;">Итого:</td>
+						<td style="padding: 12px; text-align: right; font-size: 1.1em; color: #10b981;">{{ order.total_amount }} ₽</td>
+					</tr>
+				</tfoot>
+			</table>
+		</div>
+	</div>
+	
+	<!-- Изменение статуса -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">⚙️ Изменение статуса</h2>
+		<form method="post" action="/manager/orders/{{ order.id }}/update-status/">
+			{% csrf_token %}
+			<div style="display: grid; grid-template-columns: 1fr auto; gap: 15px; align-items: end;">
+				<div>
+					<label style="display: block; margin-bottom: 5px; font-weight: 600;">Новый статус:</label>
+					<select name="status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+						{% for value, label in status_choices %}
+						<option value="{{ value }}" {% if value == order.status %}selected{% endif %}>{{ label }}</option>
+						{% endfor %}
+					</select>
+				</div>
+				<button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+					💾 Обновить статус
+				</button>
+			</div>
+			
+			<!-- Поле для причины отмены -->
+			<div id="cancel-reason" style="margin-top: 15px; display: none;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600; color: #ef4444;">Причина отмены:</label>
+				<textarea name="cancel_reason" rows="3" placeholder="Укажите причину отмены заказа..." 
+				          style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; resize: vertical;"></textarea>
+			</div>
+		</form>
+	</div>
+	
+	<!-- Навигация -->
+	<div style="display: flex; gap: 10px;">
+		<a href="/manager/orders/" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none;">
+			← К списку заказов
+		</a>
+		<a href="/manager/" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none;">
+			🏠 На панель
+		</a>
+	</div>
+</div>
+
+<script>
+// Показываем поле причины отмены при выборе статуса "Отменен"
+document.querySelector('select[name="status"]').addEventListener('change', function() {
+    const cancelReason = document.getElementById('cancel-reason');
+    if (this.value === 'cancelled') {
+        cancelReason.style.display = 'block';
+    } else {
+        cancelReason.style.display = 'none';
+    }
+});
+
+// Инициализация при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+    const statusSelect = document.querySelector('select[name="status"]');
+    const cancelReason = document.getElementById('cancel-reason');
+    if (statusSelect.value === 'cancelled') {
+        cancelReason.style.display = 'block';
+    }
+});
+</script>
+{% endblock %}
+
+
+
+
+
+

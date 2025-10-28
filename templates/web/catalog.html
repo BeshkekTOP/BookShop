@@ -2,20 +2,67 @@
 {% block title %}Каталог — Книжный магазин{% endblock %}
 {% block content %}
 <h1>Каталог</h1>
-<form method="get" class="catalog-search" style="margin-bottom:16px">
-	<input type="text" name="q" value="{{ q }}" placeholder="Поиск по названию или ISBN" />
-	<button type="submit" class="btn small">Искать</button>
+
+<!-- Форма поиска и фильтрации -->
+<form method="get" style="margin-bottom: 20px; padding: 16px; background-color: #f9fafb; border-radius: 8px;">
+	<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+		<div>
+			<label for="q" style="display: block; margin-bottom: 4px; font-weight: 500;">Поиск:</label>
+			<input type="text" name="q" id="q" value="{{ q }}" placeholder="Название, ISBN или автор" 
+			       style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;" />
+		</div>
+		<div>
+			<label for="category" style="display: block; margin-bottom: 4px; font-weight: 500;">Категория:</label>
+			<select name="category" id="category" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+				<option value="">Все категории</option>
+				{% for cat in categories %}
+				<option value="{{ cat.slug }}" {% if request.GET.category == cat.slug %}selected{% endif %}>
+					{{ cat.name }}
+				</option>
+				{% endfor %}
+			</select>
+		</div>
+		<div>
+			<label for="price_min" style="display: block; margin-bottom: 4px; font-weight: 500;">Цена от:</label>
+			<input type="number" name="price_min" id="price_min" value="{{ request.GET.price_min }}" 
+			       placeholder="0" min="0" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;" />
+		</div>
+		<div>
+			<label for="price_max" style="display: block; margin-bottom: 4px; font-weight: 500;">Цена до:</label>
+			<input type="number" name="price_max" id="price_max" value="{{ request.GET.price_max }}" 
+			       placeholder="10000" min="0" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;" />
+		</div>
+		<div>
+			<label for="rating_min" style="display: block; margin-bottom: 4px; font-weight: 500;">Рейтинг от:</label>
+			<input type="number" name="rating_min" id="rating_min" value="{{ request.GET.rating_min }}" 
+			       placeholder="0" min="0" max="5" step="0.1" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;" />
+		</div>
+	</div>
+	<button type="submit" class="btn" style="padding: 10px 24px;">Применить фильтры</button>
+	<a href="{% url 'catalog' %}" class="btn small" style="background: #6b7280;">Сбросить</a>
 </form>
+
+<!-- Список книг -->
 <div class="grid">
 	{% for b in books %}
 	<article class="card">
-		<header><a href="/books/{{ b.id }}/"><strong>{{ b.title }}</strong></a></header>
+		<header>
+			<a href="/books/{{ b.id }}/"><strong>{{ b.title }}</strong></a>
+		</header>
 		<p style="margin:.5rem 0;color:var(--muted)">{{ b.category.name }}</p>
-		<p style="margin:.5rem 0"><strong>{{ b.price }} ₽</strong></p>
+		<div style="margin:.5rem 0">
+			<strong style="font-size: 1.1em; color: #2563eb;">{{ b.price }} ₽</strong>
+			{% if b.avg_rating %}
+			<span style="color: #f59e0b;">⭐ {{ b.avg_rating|floatformat:1 }}</span>
+			{% endif %}
+		</div>
 		<p><a href="/books/{{ b.id }}/" class="btn small">Подробнее</a></p>
 	</article>
 	{% empty %}
-	<p>Ничего не найдено</p>
+	<div style="padding: 40px; text-align: center; color: #6b7280;">
+		<p>📚 Книги не найдены</p>
+		<p style="margin-top: 8px; font-size: 0.9em;">Попробуйте изменить параметры поиска или фильтры</p>
+	</div>
 	{% endfor %}
 </div>
 {% endblock %}

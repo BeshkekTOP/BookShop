@@ -3,16 +3,106 @@
 {% block content %}
 <article class="card">
 	<h1 style="margin-top:0">{{ book.title }}</h1>
-	<p>Категория: {{ book.category.name }}</p>
-	<p>ISBN: {{ book.isbn }}</p>
-	<p>Цена: <strong>{{ book.price }} ₽</strong></p>
-	<p>Рейтинг: {{ book.rating }}</p>
-	<form method="post" action="/cart/" style="display:flex;gap:8px;align-items:center">
+	
+	<div style="margin-bottom: 1rem;">
+		<p><strong>Категория:</strong> {{ book.category.name }}</p>
+		<p><strong>ISBN:</strong> {{ book.isbn }}</p>
+		{% if authors %}
+		<p><strong>Автор(ы):</strong> 
+			{% for author in authors %}
+				{{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+			{% endfor %}
+		</p>
+		{% endif %}
+	</div>
+	
+	{% if book.description %}
+	<div style="margin-bottom: 1rem;">
+		<p><strong>Описание:</strong></p>
+		<p>{{ book.description }}</p>
+	</div>
+	{% endif %}
+	
+	<div style="margin-bottom: 1rem;">
+		<p><strong>Цена:</strong> <span style="font-size: 1.2em; color: #2563eb;">{{ book.price }} ₽</span></p>
+		<p><strong>Рейтинг:</strong> ⭐ {{ book.rating|floatformat:1 }}</p>
+		{% if inventory %}
+			{% if inventory.available > 0 %}
+				<p style="color: green;"><strong>Наличие:</strong> В наличии ({{ inventory.available }} шт.)</p>
+			{% else %}
+				<p style="color: red;"><strong>Наличие:</strong> Нет в наличии</p>
+			{% endif %}
+		{% endif %}
+	</div>
+	
+	{% if user.is_authenticated %}
+	<form method="post" action="/cart/" style="display:flex;gap:8px;align-items:center;margin-top: 1rem;">
 		{% csrf_token %}
 		<input type="hidden" name="book" value="{{ book.id }}" />
 		<input type="hidden" name="action" value="add" />
-		<input type="number" min="1" name="quantity" value="1" style="max-width:100px" />
-		<button type="submit" class="btn small">Добавить в корзину</button>
+		<input type="number" min="1" max="{% if inventory %}{{ inventory.available }}{% endif %}" 
+		       name="quantity" value="1" style="max-width:100px" />
+		<button type="submit" class="btn small" {% if inventory and inventory.available == 0 %}disabled{% endif %}>
+			{% if inventory and inventory.available > 0 %}Добавить в корзину{% else %}Нет в наличии{% endif %}
+		</button>
 	</form>
+	{% else %}
+	<div style="margin-top: 1rem; padding: 1rem; background-color: #fef3c7; border-radius: 8px;">
+		<p style="margin: 0;">⚠️ Для добавления книг в корзину необходимо <a href="/login/">войти</a> в систему.</p>
+	</div>
+	{% endif %}
+	
+	<!-- Отзывы -->
+	<div style="margin-top: 2rem;">
+		<h2 style="font-size: 1.2em; margin-bottom: 1rem;">📝 Отзывы и оценки</h2>
+		
+		{% if reviews %}
+		<div style="display: flex; flex-direction: column; gap: 1rem;">
+			{% for review in reviews %}
+			<div style="border: 1px solid #e5e7eb; padding: 1rem; border-radius: 8px; background-color: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+				<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+					<div>
+						<p style="margin: 0; font-weight: 600; color: #374151;">{{ review.user.username }}</p>
+						<div style="display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem;">
+							<span style="color: #fbbf24;">⭐</span>
+							<span style="font-weight: 600;">{{ review.rating }}/5</span>
+						</div>
+					</div>
+					<div style="text-align: right;">
+						<small style="color: #6b7280;">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+						{% if user.is_authenticated and user == review.user %}
+						<div style="margin-top: 0.5rem;">
+							<a href="/reviews/{{ book.id }}/add/" style="color: #3b82f6; text-decoration: none; font-size: 0.9em; margin-right: 10px;">✏️ Редактировать</a>
+							<a href="/reviews/{{ book.id }}/delete/" onclick="return confirm('Удалить отзыв?')" style="color: #ef4444; text-decoration: none; font-size: 0.9em;">🗑️ Удалить</a>
+						</div>
+						{% endif %}
+					</div>
+				</div>
+				{% if review.text %}
+				<div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid #f3f4f6;">
+					<p style="margin: 0; line-height: 1.5; color: #374151;">{{ review.text }}</p>
+				</div>
+				{% endif %}
+			</div>
+			{% endfor %}
+		</div>
+		{% else %}
+		<div style="text-align: center; padding: 2rem; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+			<p style="margin: 0; color: #6b7280;">Пока нет отзывов. Станьте первым!</p>
+		</div>
+		{% endif %}
+		
+		{% if user.is_authenticated %}
+		<div style="margin-top: 1.5rem; text-align: center;">
+			<a href="/reviews/{{ book.id }}/add/" class="btn" style="background: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">
+				✍️ Оставить отзыв
+			</a>
+		</div>
+		{% else %}
+		<div style="margin-top: 1rem; padding: 1rem; background-color: #fef3c7; border-radius: 8px; text-align: center;">
+			<p style="margin: 0; color: #92400e;">Чтобы оставить отзыв, необходимо <a href="/login/" style="color: #d97706; font-weight: 600;">войти</a> в систему.</p>
+		</div>
+		{% endif %}
+	</div>
 </article>
 {% endblock %}

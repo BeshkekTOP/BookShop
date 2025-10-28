@@ -6,3 +6,8 @@ class CoreConfig(AppConfig):
     name = 'backend.apps.core'
     verbose_name = 'Core'
 
+
+
+
+
+

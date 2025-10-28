@@ -26,7 +26,7 @@
 				</form>
 			</td>
 			<td>{{ it.book.price }} ₽</td>
-			<td>{{ it.book.price|floatformat:2|add:"0" }}</td>
+			<td>{% widthratio it.book.price 1 it.quantity %} ₽</td>
 			<td>
 				<form method="post">
 					{% csrf_token %}
@@ -43,9 +43,8 @@
 </table>
 {% if items %}
 <p style="text-align:right"><strong>Итого: {{ total }} ₽</strong></p>
-<form method="post" action="/checkout/" style="text-align:right">
-	{% csrf_token %}
-	<button type="submit" class="btn small">Оформить заказ</button>
-</form>
+<div style="text-align:right">
+	<a href="/checkout-detailed/" class="btn">📦 Оформить заказ</a>
+</div>
 {% endif %}
 {% endblock %}

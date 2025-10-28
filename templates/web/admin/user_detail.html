@@ -1,0 +1,172 @@
+{% extends 'web/base.html' %}
+{% block title %}Пользователь {{ user.username }}{% endblock %}
+{% block content %}
+<div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
+	<h1>👤 {{ user.username }}</h1>
+	
+	<!-- Основная информация -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">Основная информация</h2>
+		<table style="width: 100%;">
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280; width: 200px;">Имя пользователя:</td>
+				<td style="padding: 8px 0;"><strong>{{ user.username }}</strong></td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Email:</td>
+				<td style="padding: 8px 0;">{{ user.email|default:"—" }}</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">ФИО:</td>
+				<td style="padding: 8px 0;">{{ user.first_name }} {{ user.last_name }}</td>
+			</tr>
+			{% if profile %}
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Роль:</td>
+				<td style="padding: 8px 0;">
+					<span style="padding: 4px 8px; border-radius: 4px; font-size: 0.9em;
+						{% if profile.role == 'admin' %}background: #fee2e2; color: #991b1b;
+						{% elif profile.role == 'manager' %}background: #dbeafe; color: #1e40af;
+						{% elif profile.role == 'buyer' %}background: #dcfce7; color: #166534;
+						{% else %}background: #f3f4f6; color: #6b7280;{% endif %}">
+						{{ profile.get_role_display }}
+					</span>
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Статус:</td>
+				<td style="padding: 8px 0;">
+					{% if profile.is_blocked %}
+						<span style="color: #ef4444; font-weight: 600;">🔒 Заблокирован</span>
+						{% if profile.blocked_reason %}
+							<br><small style="color: #6b7280;">Причина: {{ profile.blocked_reason }}</small>
+						{% endif %}
+					{% else %}
+						<span style="color: #10b981; font-weight: 600;">✅ Активен</span>
+					{% endif %}
+				</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Телефон:</td>
+				<td style="padding: 8px 0;">{{ profile.phone|default:"—" }}</td>
+			</tr>
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Город:</td>
+				<td style="padding: 8px 0;">{{ profile.city|default:"—" }}</td>
+			</tr>
+			{% endif %}
+			<tr>
+				<td style="padding: 8px 0; color: #6b7280;">Дата регистрации:</td>
+				<td style="padding: 8px 0;">{{ user.date_joined|date:"d.m.Y H:i" }}</td>
+			</tr>
+		</table>
+	</div>
+	
+	<!-- Статистика -->
+	<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+		<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+			<h3 style="margin: 0 0 10px 0; color: #6b7280; font-size: 0.9em;">Заказов:</h3>
+			<p style="font-size: 2em; margin: 0; color: #2563eb; font-weight: bold;">{{ total_orders }}</p>
+		</div>
+		<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+			<h3 style="margin: 0 0 10px 0; color: #6b7280; font-size: 0.9em;">Потратил:</h3>
+			<p style="font-size: 2em; margin: 0; color: #10b981; font-weight: bold;">{{ total_spent }} ₽</p>
+		</div>
+		<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+			<h3 style="margin: 0 0 10px 0; color: #6b7280; font-size: 0.9em;">Средний чек:</h3>
+			<p style="font-size: 2em; margin: 0; color: #f59e0b; font-weight: bold;">{{ avg_order_value|floatformat:0 }} ₽</p>
+		</div>
+	</div>
+	
+	<!-- Действия -->
+	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">Действия</h2>
+		
+		<!-- Блокировка -->
+		<div style="margin-bottom: 15px;">
+			{% if profile and profile.is_blocked %}
+			<form method="post" action="/admin/users/{{ user.id }}/block/">
+				{% csrf_token %}
+				<input type="hidden" name="action" value="unblock">
+				<button type="submit" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+					✅ Разблокировать
+				</button>
+			</form>
+			{% else %}
+			<form method="post" action="/admin/users/{{ user.id }}/block/" style="display: flex; gap: 10px; align-items: start;">
+				{% csrf_token %}
+				<input type="hidden" name="action" value="block">
+				<input type="text" name="reason" placeholder="Причина блокировки" required 
+				       style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
+				<button type="submit" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+					🔒 Заблокировать
+				</button>
+			</form>
+			{% endif %}
+		</div>
+		
+		<!-- Смена роли -->
+		<div style="margin-bottom: 15px;">
+			<form method="post" action="/admin/users/{{ user.id }}/change-role/" style="display: flex; gap: 10px;">
+				{% csrf_token %}
+				<select name="role" style="padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; flex: 1;">
+					<option value="guest" {% if profile and profile.role == 'guest' %}selected{% endif %}>Гость</option>
+					<option value="buyer" {% if profile and profile.role == 'buyer' %}selected{% endif %}>Покупатель</option>
+					<option value="manager" {% if profile and profile.role == 'manager' %}selected{% endif %}>Менеджер</option>
+					<option value="admin" {% if profile and profile.role == 'admin' %}selected{% endif %}>Администратор</option>
+				</select>
+				<button type="submit" style="background: #2563eb; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+					💼 Назначить роль
+				</button>
+			</form>
+		</div>
+		
+		<!-- Просмотр логов -->
+		<div style="margin-bottom: 15px;">
+			<a href="/admin/users/{{ user.id }}/activity/" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block;">
+				📊 Логи активности
+			</a>
+		</div>
+		
+		<!-- Удаление -->
+		<form method="post" action="/admin/users/{{ user.id }}/delete/" onsubmit="return confirm('Вы уверены, что хотите удалить этого пользователя? После удаления вы будете перенаправлены на список пользователей.');">
+			{% csrf_token %}
+			<button type="submit" style="background: #991b1b; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
+				🗑️ Удалить пользователя
+			</button>
+		</form>
+	</div>
+	
+	<!-- Последние заказы -->
+	{% if orders %}
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+		<h2 style="margin: 0 0 15px 0;">Последние заказы</h2>
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 10px; text-align: left;">№ Заказа</th>
+					<th style="padding: 10px; text-align: left;">Дата</th>
+					<th style="padding: 10px; text-align: right;">Сумма</th>
+					<th style="padding: 10px; text-align: center;">Статус</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for order in orders %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 10px;">#{{ order.id }}</td>
+					<td style="padding: 10px;">{{ order.created_at|date:"d.m.Y H:i" }}</td>
+					<td style="padding: 10px; text-align: right; font-weight: 600;">{{ order.total_amount }} ₽</td>
+					<td style="padding: 10px; text-align: center;">
+						{{ order.get_status_display }}
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	{% endif %}
+</div>
+{% endblock %}
+
+
+
