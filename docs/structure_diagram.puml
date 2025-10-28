@@ -1,0 +1,242 @@
+@startuml
+!define RECTANGLE class
+
+skinparam componentStyle uml2
+skinparam roundcorner 15
+skinparam shadowing true
+
+package "Web" {
+    component Backend
+    component Pages
+    component Service
+}
+
+' === BACKEND ===
+package Backend {
+    component CatalogApp #FFE0E0
+    component OrdersApp #E0FFE0
+    component UsersApp #E0E0FF
+    component ReviewsApp #FFFFE0
+    component AnalyticsApp #FFE0FF
+    component CoreApp #E0FFFF
+    component WebApp #FFE0FF
+}
+
+package CatalogApp {
+    file models.py
+    file serializers.py
+    file views.py
+    file urls.py
+    file management
+}
+
+package OrdersApp {
+    file models.py
+    file serializers.py
+    file views.py
+    file urls.py
+}
+
+package UsersApp {
+    file models.py
+    file serializers.py
+    file views.py
+    file urls.py
+}
+
+package ReviewsApp {
+    file models.py
+    file serializers.py
+    file views.py
+    file urls.py
+}
+
+package AnalyticsApp {
+    file models.py
+    file serializers.py
+    file views.py
+    file urls.py
+}
+
+package CoreApp {
+    file decorators.py
+    file middleware.py
+    file models.py
+    file roles.py
+}
+
+package WebApp {
+    file views.py
+    file buyer_views.py
+    file admin_views.py
+    file manager_views.py
+    file urls.py
+}
+
+' === PAGES ===
+package Pages {
+    component MainPages #FFE0E0
+    component BuyerPages #E0FFE0
+    component AdminPages #E0E0FF
+    component ManagerPages #FFFFE0
+}
+
+package MainPages {
+    file base.html
+    file home.html
+    file catalog.html
+    file book_detail.html
+    file cart.html
+    file profile.html
+    file login.html
+    file register.html
+}
+
+package BuyerPages {
+    file add_review.html
+    file checkout_detailed.html
+    file edit_profile.html
+    file orders_history.html
+    file order_detail.html
+}
+
+package AdminPages {
+    file admin_dashboard.html
+    file admin_users_list.html
+    file admin_user_detail.html
+    file admin_books.html
+    file admin_authors.html
+    file admin_categories.html
+    file admin_inventory.html
+    file admin_reports.html
+}
+
+package ManagerPages {
+    file manager_dashboard.html
+    file manager_orders.html
+    file manager_order_detail.html
+    file manager_statistics.html
+}
+
+' === SERVICE ===
+package Service {
+    component Database #FFE0E0
+    component API #E0FFE0
+    component StaticFiles #E0E0FF
+}
+
+package Database {
+    file sqlite.db
+    file PostgreSQL
+    database Tables
+    database Views
+    database Procedures
+    database Triggers
+}
+
+package API {
+    file docs.py
+    file urls.py
+    file authentication
+    file endpoints
+}
+
+package StaticFiles {
+    file styles.css
+    file keyboard.js
+    file theme.js
+}
+
+' Connections
+Backend --> CatalogApp
+Backend --> OrdersApp
+Backend --> UsersApp
+Backend --> ReviewsApp
+Backend --> AnalyticsApp
+Backend --> CoreApp
+Backend --> WebApp
+
+Pages --> MainPages
+Pages --> BuyerPages
+Pages --> AdminPages
+Pages --> ManagerPages
+
+Service --> Database
+Service --> API
+Service --> StaticFiles
+
+' App connections
+CatalogApp --> models.py
+CatalogApp --> serializers.py
+CatalogApp --> views.py
+CatalogApp --> urls.py
+
+OrdersApp --> models.py
+OrdersApp --> serializers.py
+OrdersApp --> views.py
+
+UsersApp --> models.py
+UsersApp --> serializers.py
+UsersApp --> views.py
+
+ReviewsApp --> models.py
+ReviewsApp --> serializers.py
+
+AnalyticsApp --> models.py
+AnalyticsApp --> serializers.py
+
+CoreApp --> decorators.py
+CoreApp --> middleware.py
+CoreApp --> models.py
+CoreApp --> roles.py
+
+WebApp --> views.py
+WebApp --> buyer_views.py
+WebApp --> admin_views.py
+WebApp --> manager_views.py
+
+' Pages connections
+MainPages --> base.html
+MainPages --> home.html
+MainPages --> catalog.html
+MainPages --> book_detail.html
+MainPages --> cart.html
+MainPages --> profile.html
+MainPages --> login.html
+MainPages --> register.html
+
+BuyerPages --> add_review.html
+BuyerPages --> checkout_detailed.html
+BuyerPages --> edit_profile.html
+BuyerPages --> orders_history.html
+BuyerPages --> order_detail.html
+
+AdminPages --> admin_dashboard.html
+AdminPages --> admin_users_list.html
+AdminPages --> admin_books.html
+AdminPages --> admin_authors.html
+AdminPages --> admin_categories.html
+AdminPages --> admin_inventory.html
+AdminPages --> admin_reports.html
+
+ManagerPages --> manager_dashboard.html
+ManagerPages --> manager_orders.html
+ManagerPages --> manager_order_detail.html
+ManagerPages --> manager_statistics.html
+
+' Service connections
+Database --> sqlite.db
+Database --> PostgreSQL
+Database --> Tables
+Database --> Views
+
+API --> docs.py
+API --> urls.py
+API --> authentication
+API --> endpoints
+
+StaticFiles --> styles.css
+StaticFiles --> keyboard.js
+StaticFiles --> theme.js
+
+@enduml

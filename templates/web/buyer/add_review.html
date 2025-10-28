@@ -23,7 +23,7 @@
 		{% endif %}
 		
 		<div style="background: #e0f2fe; border: 1px solid #0ea5e9; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
-			<p style="margin: 0; color: #0c4a6e;"><strong>💡 Подсказка:</strong> После отправки отзыва вы будете перенаправлены на страницу каталога.</p>
+			<p style="margin: 0; color: #0c4a6e;"><strong>💡 Подсказка:</strong> После отправки отзыва вы будете перенаправлены на страницу книги.</p>
 		</div>
 		
 		<form method="post" action="">
@@ -58,7 +58,7 @@
 				<button type="submit" class="btn">
 					{% if existing_review %}Обновить отзыв{% else %}Отправить отзыв{% endif %}
 				</button>
-				<a href="/catalog/" class="btn" style="background: #6b7280;">Назад к каталогу</a>
+				<a href="/books/{{ book.id }}/" class="btn" style="background: #6b7280;">Назад к книге</a>
 			</div>
 		</form>
 		

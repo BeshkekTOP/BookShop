@@ -121,6 +121,27 @@ def cart_view(request):
         book_id = request.POST.get("book")
         qty = int(request.POST.get("quantity", "1") or 1)
         if action == "add" and book_id:
+            # Проверка наличия товара на складе
+            from backend.apps.catalog.models import Inventory, Book
+            book = get_object_or_404(Book, id=book_id)
+            inventory, _ = Inventory.objects.get_or_create(book=book)
+            
+            # Проверяем доступное количество
+            available = inventory.available
+            
+            if available <= 0:
+                messages.error(request, f"Товар '{book.title}' отсутствует на складе")
+                return redirect('catalog')
+            
+            # Проверяем, не превышает ли запрашиваемое количество доступное
+            existing_item = CartItem.objects.filter(cart=cart, book_id=book_id).first()
+            current_qty = existing_item.quantity if existing_item else 0
+            requested_qty = current_qty + qty
+            
+            if requested_qty > available:
+                messages.error(request, f"Недостаточно товара на складе. Доступно: {available} шт.")
+                return redirect('catalog')
+            
             item, created = CartItem.objects.get_or_create(cart=cart, book_id=book_id, defaults={"quantity": qty})
             if not created:
                 item.quantity = item.quantity + qty
@@ -129,24 +150,50 @@ def cart_view(request):
         elif action in ("inc", "dec") and book_id:
             try:
                 item = CartItem.objects.get(cart=cart, book_id=book_id)
+                from backend.apps.catalog.models import Inventory
+                inventory = Inventory.objects.get(book=item.book)
+                available = inventory.available
+                
                 if action == "inc":
-                    item.quantity += 1
-                    item.save()
+                    # Проверяем, не превышает ли увеличенное количество доступное
+                    if item.quantity + 1 > available:
+                        messages.error(request, f"Недостаточно товара на складе. Доступно: {available} шт.")
+                    else:
+                        item.quantity += 1
+                        item.save()
+                        messages.success(request, "Корзина обновлена")
                 else:
                     if item.quantity > 1:
                         item.quantity -= 1
                         item.save()
+                        messages.success(request, "Корзина обновлена")
                     else:
                         item.delete()
-                messages.success(request, "Корзина обновлена")
+                        messages.success(request, "Товар удалён из корзины")
             except CartItem.DoesNotExist:
                 pass
+            except Inventory.DoesNotExist:
+                messages.error(request, "Информация о товаре не найдена")
         elif action == "remove" and book_id:
             CartItem.objects.filter(cart=cart, book_id=book_id).delete()
             messages.success(request, "Товар удалён из корзины")
         return redirect('cart')
 
     items = cart.items.select_related('book').all()
+    
+    # Проверяем наличие товаров и показываем предупреждения
+    for item in items:
+        from backend.apps.catalog.models import Inventory
+        try:
+            inventory = Inventory.objects.get(book=item.book)
+            if inventory.available < item.quantity:
+                if inventory.available > 0:
+                    messages.warning(request, f"Товар '{item.book.title}': доступно только {inventory.available} шт., в корзине {item.quantity} шт.")
+                else:
+                    messages.error(request, f"Товар '{item.book.title}' отсутствует на складе")
+        except Inventory.DoesNotExist:
+            messages.error(request, f"Информация о товаре '{item.book.title}' не найдена")
+    
     total = sum((it.book.price * it.quantity for it in items), start=Decimal('0'))
     return render(request, 'web/cart.html', {"cart": cart, "items": items, "total": total})
 
@@ -234,6 +281,13 @@ def profile_view(request):
     else:
         form = ProfileForm(instance=profile)
     return render(request, 'web/profile.html', {"form": form})
+
+
+def checkout_success(request, order_id):
+    """Страница успешного оформления заказа"""
+    from backend.apps.orders.models import Order
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    return render(request, 'web/checkout_success.html', {"order": order})
 
 
 @admin_required

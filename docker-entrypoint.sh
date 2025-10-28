@@ -35,6 +35,10 @@ else:
     print('Superuser already exists')
 "
 
+# Загружаем тестовые данные если база пустая (пропускаем если уже есть книги)
+echo "Loading test data..."
+python manage.py init_data
+
 # Запускаем сервер
 echo "Starting server..."
 exec python manage.py runserver 0.0.0.0:8000

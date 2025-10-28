@@ -1,7 +1,7 @@
 from django.urls import path
 from . import views
 from . import admin_views
-# from . import buyer_views  # Временно отключено
+from . import buyer_views
 from . import manager_views
 from . import sales_views
 
@@ -17,13 +17,14 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('profile/', views.profile_view, name='profile'),
     
-    # Покупатель - временно отключено до восстановления buyer_views.py
-    # path('orders/', views.profile_view, name='orders-history'),
-    # path('orders/<int:order_id>/', views.profile_view, name='order-detail'),
-    # path('reviews/<int:book_id>/add/', buyer_views.add_review, name='add-review'),
-    # path('reviews/<int:book_id>/delete/', buyer_views.delete_review, name='delete-review'),
-    # path('profile/edit/', buyer_views.edit_profile, name='edit-profile'),
-    # path('checkout-detailed/', buyer_views.checkout_detailed, name='checkout-detailed'),
+    # Покупатель
+    path('reviews/<int:book_id>/add/', buyer_views.add_review, name='add-review'),
+    path('reviews/<int:book_id>/delete/', buyer_views.delete_review, name='delete-review'),
+    path('profile/edit/', buyer_views.edit_profile, name='edit-profile'),
+    path('checkout-detailed/', buyer_views.checkout_detailed, name='checkout-detailed'),
+    path('checkout-success/<int:order_id>/', views.checkout_success, name='checkout-success'),
+    path('orders/', buyer_views.orders_history, name='orders-history'),
+    path('orders/<int:order_id>/', buyer_views.order_detail, name='order-detail'),
     
     # Управление каталогом
     path('admin/books/', views.admin_books, name='admin-books'),

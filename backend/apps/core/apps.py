@@ -11,3 +11,8 @@ class CoreConfig(AppConfig):
 
 
 
+
+
+
+
+
