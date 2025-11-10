@@ -4,6 +4,7 @@ from . import admin_views
 from . import buyer_views
 from . import manager_views
 from . import sales_views
+from . import backup_views
 
 urlpatterns = [
     path('', views.login_view, name='home'),
@@ -25,6 +26,8 @@ urlpatterns = [
     path('checkout-success/<int:order_id>/', views.checkout_success, name='checkout-success'),
     path('orders/', buyer_views.orders_history, name='orders-history'),
     path('orders/<int:order_id>/', buyer_views.order_detail, name='order-detail'),
+    path('orders/<int:order_id>/cancel/', buyer_views.cancel_order, name='cancel-order'),
+    path('profile/logs/', buyer_views.user_activity_logs, name='user-activity-logs'),
     
     # Управление каталогом
     path('admin/books/', views.admin_books, name='admin-books'),
@@ -38,8 +41,8 @@ urlpatterns = [
     
     # Управление пользователями
     path('admin/users/', admin_views.admin_users_list, name='admin-users'),
+    path('admin/users/create/', admin_views.admin_user_create, name='admin-user-create'),
     path('admin/users/<int:user_id>/', admin_views.admin_user_detail, name='admin-user-detail'),
-    path('admin/users/<int:user_id>/block/', admin_views.admin_user_block, name='admin-user-block'),
     path('admin/users/<int:user_id>/change-role/', admin_views.admin_user_change_role, name='admin-user-change-role'),
     path('admin/users/<int:user_id>/activity/', admin_views.admin_user_activity_logs, name='admin-user-activity'),
     path('admin/users/<int:user_id>/delete/', admin_views.admin_user_delete, name='admin-user-delete'),
@@ -56,6 +59,13 @@ urlpatterns = [
     
     # Логи
     path('admin/logs/', admin_views.admin_audit_logs, name='admin-logs'),
+    
+    # Резервные копии
+    path('admin/backups/', backup_views.backup_list, name='admin-backups'),
+    path('admin/backups/create/', backup_views.backup_create, name='admin-backup-create'),
+    path('admin/backups/<str:filename>/download/', backup_views.backup_download, name='admin-backup-download'),
+    path('admin/backups/<str:filename>/restore/', backup_views.backup_restore, name='admin-backup-restore'),
+    path('admin/backups/<str:filename>/delete/', backup_views.backup_delete, name='admin-backup-delete'),
     
     # Менеджер
     path('manager/', manager_views.manager_dashboard, name='manager-dashboard'),

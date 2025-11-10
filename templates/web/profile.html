@@ -15,9 +15,12 @@
 		{% endif %}
 	</div>
 	
-	<div style="display: flex; gap: 10px; margin-top: 20px;">
+	<div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
 		<a href="/profile/edit/" class="btn">⚙️ Редактировать профиль</a>
 		<a href="/orders/" class="btn" style="background: #6b7280;">📦 История заказов</a>
+		{% if request.user.profile.role == 'admin' %}
+		<a href="/profile/logs/" class="btn" style="background: #8b5cf6;">📝 Логи активности</a>
+		{% endif %}
 	</div>
 </div>
 {% endblock %}

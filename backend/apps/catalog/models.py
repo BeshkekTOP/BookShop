@@ -69,6 +69,7 @@ class Inventory(models.Model):
     stock = models.PositiveIntegerField(default=0)
     reserved = models.PositiveIntegerField(default=0)
 
+    @property
     def available(self) -> int:
         return max(0, self.stock - self.reserved)
 

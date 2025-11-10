@@ -1,0 +1,75 @@
+{% extends 'web/base.html' %}
+{% block title %}Резервные копии{% endblock %}
+{% block content %}
+<div style="max-width: 1400px; margin: 0 auto; padding: 20px;">
+	<h1>💾 Резервные копии</h1>
+	
+	<div style="margin-bottom: 20px;">
+		<form method="post" action="{% url 'admin-backup-create' %}" style="display: inline-block;">
+			{% csrf_token %}
+			<button type="submit" class="btn" style="background: #10b981;">💾 Создать резервную копию</button>
+		</form>
+	</div>
+	
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-top: 20px; overflow-x: auto;">
+		{% if backups %}
+		<table style="width: 100%; border-collapse: collapse;">
+			<thead style="background: #f9fafb;">
+				<tr>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Имя файла</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Размер</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Дата создания</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Действия</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for backup in backups %}
+				<tr style="border-top: 1px solid #e5e7eb;">
+					<td style="padding: 12px;">
+						<strong>{{ backup.filename }}</strong>
+					</td>
+					<td style="padding: 12px; color: #6b7280;">
+						{{ backup.size|filesizeformat }}
+					</td>
+					<td style="padding: 12px; color: #6b7280;">
+						{{ backup.created_at|date:"d.m.Y H:i:s" }}
+					</td>
+					<td style="padding: 12px;">
+						<div style="display: flex; gap: 8px; flex-wrap: wrap;">
+							<form method="post" action="{% url 'admin-backup-restore' backup.filename %}" style="display: inline-block;" 
+							      onsubmit="return confirm('Вы уверены, что хотите восстановить данные из этой резервной копии? Это действие заменит все текущие данные!');">
+								{% csrf_token %}
+								<button type="submit" class="btn small" style="background: #f59e0b; color: white;" title="Восстановить">
+									🔄 Восстановить
+								</button>
+							</form>
+							<a href="{% url 'admin-backup-download' backup.filename %}" class="btn small" style="background: #2563eb; color: white;" title="Скачать">
+								⬇️ Скачать
+							</a>
+							<form method="post" action="{% url 'admin-backup-delete' backup.filename %}" style="display: inline-block;"
+							      onsubmit="return confirm('Вы уверены, что хотите удалить эту резервную копию?');">
+								{% csrf_token %}
+								<button type="submit" class="btn small" style="background: #ef4444; color: white;" title="Удалить">
+									🗑️ Удалить
+								</button>
+							</form>
+						</div>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		{% else %}
+		<div style="padding: 40px; text-align: center; color: #6b7280;">
+			<p>Резервных копий пока нет</p>
+			<p style="margin-top: 8px; font-size: 0.9em;">Создайте первую резервную копию, нажав на кнопку выше</p>
+		</div>
+		{% endif %}
+	</div>
+	
+	<div style="margin-top: 20px;">
+		<a href="/admin/dashboard/" class="btn btn-ghost">← Назад к панели</a>
+	</div>
+</div>
+{% endblock %}
+

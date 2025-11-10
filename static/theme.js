@@ -2,7 +2,6 @@
 class ThemeManager {
     constructor() {
         this.theme = localStorage.getItem('theme') || 'light';
-        // Применяем тему сразу при загрузке
         this.applyTheme(this.theme);
         this.init();
     }

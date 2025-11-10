@@ -34,19 +34,6 @@
 				</td>
 			</tr>
 			<tr>
-				<td style="padding: 8px 0; color: #6b7280;">Статус:</td>
-				<td style="padding: 8px 0;">
-					{% if profile.is_blocked %}
-						<span style="color: #ef4444; font-weight: 600;">🔒 Заблокирован</span>
-						{% if profile.blocked_reason %}
-							<br><small style="color: #6b7280;">Причина: {{ profile.blocked_reason }}</small>
-						{% endif %}
-					{% else %}
-						<span style="color: #10b981; font-weight: 600;">✅ Активен</span>
-					{% endif %}
-				</td>
-			</tr>
-			<tr>
 				<td style="padding: 8px 0; color: #6b7280;">Телефон:</td>
 				<td style="padding: 8px 0;">{{ profile.phone|default:"—" }}</td>
 			</tr>
@@ -81,29 +68,6 @@
 	<!-- Действия -->
 	<div style="background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e5e7eb;">
 		<h2 style="margin: 0 0 15px 0;">Действия</h2>
-		
-		<!-- Блокировка -->
-		<div style="margin-bottom: 15px;">
-			{% if profile and profile.is_blocked %}
-			<form method="post" action="/admin/users/{{ user.id }}/block/">
-				{% csrf_token %}
-				<input type="hidden" name="action" value="unblock">
-				<button type="submit" style="background: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
-					✅ Разблокировать
-				</button>
-			</form>
-			{% else %}
-			<form method="post" action="/admin/users/{{ user.id }}/block/" style="display: flex; gap: 10px; align-items: start;">
-				{% csrf_token %}
-				<input type="hidden" name="action" value="block">
-				<input type="text" name="reason" placeholder="Причина блокировки" required 
-				       style="flex: 1; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-				<button type="submit" style="background: #ef4444; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer;">
-					🔒 Заблокировать
-				</button>
-			</form>
-			{% endif %}
-		</div>
 		
 		<!-- Смена роли -->
 		<div style="margin-bottom: 15px;">

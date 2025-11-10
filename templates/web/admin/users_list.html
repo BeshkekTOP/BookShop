@@ -2,11 +2,14 @@
 {% block title %}Управление пользователями{% endblock %}
 {% block content %}
 <div style="max-width: 1200px; margin: 0 auto; padding: 20px;">
-	<h1>👥 Управление пользователями</h1>
+	<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+		<h1 style="margin: 0;">👥 Управление пользователями</h1>
+		<a href="/admin/users/create/" class="btn" style="background: #10b981;">+ Добавить пользователя</a>
+	</div>
 	
 	<!-- Поиск и фильтры -->
 	<div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-		<form method="get" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 10px; align-items: end;">
+		<form method="get" style="display: grid; grid-template-columns: 2fr 1fr auto; gap: 10px; align-items: end;">
 			<div>
 				<label style="display: block; margin-bottom: 5px; font-weight: 500;">Поиск:</label>
 				<input type="text" name="search" value="{{ search }}" placeholder="Имя, email, телефон..." 
@@ -20,14 +23,6 @@
 					<option value="buyer" {% if role_filter == 'buyer' %}selected{% endif %}>Покупатель</option>
 					<option value="manager" {% if role_filter == 'manager' %}selected{% endif %}>Менеджер</option>
 					<option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Администратор</option>
-				</select>
-			</div>
-			<div>
-				<label style="display: block; margin-bottom: 5px; font-weight: 500;">Статус:</label>
-				<select name="status" style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px;">
-					<option value="">Все</option>
-					<option value="active" {% if status_filter == 'active' %}selected{% endif %}>Активные</option>
-					<option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>Заблокированные</option>
 				</select>
 			</div>
 			<div>
@@ -45,7 +40,6 @@
 					<th style="padding: 12px; text-align: left; font-weight: 600;">Пользователь</th>
 					<th style="padding: 12px; text-align: left; font-weight: 600;">Email</th>
 					<th style="padding: 12px; text-align: center; font-weight: 600;">Роль</th>
-					<th style="padding: 12px; text-align: center; font-weight: 600;">Статус</th>
 					<th style="padding: 12px; text-align: center; font-weight: 600;">Дата регистрации</th>
 					<th style="padding: 12px; text-align: center; font-weight: 600;">Действия</th>
 				</tr>
@@ -69,13 +63,6 @@
 							{{ user.profile.get_role_display }}
 						</span>
 					</td>
-					<td style="padding: 12px; text-align: center;">
-						{% if user.profile.is_blocked %}
-							<span style="color: #ef4444; font-weight: 600;">🔒 Заблокирован</span>
-						{% else %}
-							<span style="color: #10b981; font-weight: 600;">✅ Активен</span>
-						{% endif %}
-					</td>
 					<td style="padding: 12px; text-align: center; color: #6b7280;">
 						{{ user.date_joined|date:"d.m.Y" }}
 					</td>
@@ -85,7 +72,7 @@
 				</tr>
 				{% empty %}
 				<tr>
-					<td colspan="6" style="padding: 40px; text-align: center; color: #6b7280;">
+					<td colspan="5" style="padding: 40px; text-align: center; color: #6b7280;">
 						Пользователи не найдены
 					</td>
 				</tr>
@@ -95,6 +82,14 @@
 	</div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
 
 
 

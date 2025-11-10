@@ -5,7 +5,57 @@
 	<h2 style="margin-top:0">Регистрация</h2>
 	<form method="post">
 		{% csrf_token %}
-		{{ form.as_p }}
+		{% if form.errors %}
+			<div style="color: red; margin-bottom: 1rem;">
+				{% for field, errors in form.errors.items %}
+					{% for error in errors %}
+						<p>{{ error }}</p>
+					{% endfor %}
+				{% endfor %}
+			</div>
+		{% endif %}
+		<p>
+			<label for="{{ form.username.id_for_label }}">{{ form.username.label }}:</label>
+			{{ form.username }}
+			{% if form.username.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.username.help_text }}</small>
+			{% endif %}
+		</p>
+		<p>
+			<label for="{{ form.email.id_for_label }}">{{ form.email.label }}:</label>
+			{{ form.email }}
+			{% if form.email.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.email.help_text }}</small>
+			{% endif %}
+		</p>
+		<p>
+			<label for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}:</label>
+			{{ form.first_name }}
+			{% if form.first_name.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.first_name.help_text }}</small>
+			{% endif %}
+		</p>
+		<p>
+			<label for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}:</label>
+			{{ form.last_name }}
+			{% if form.last_name.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.last_name.help_text }}</small>
+			{% endif %}
+		</p>
+		<p>
+			<label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}:</label>
+			{{ form.password1 }}
+			{% if form.password1.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.password1.help_text }}</small>
+			{% endif %}
+		</p>
+		<p>
+			<label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}:</label>
+			{{ form.password2 }}
+			{% if form.password2.help_text %}
+				<small style="display: block; color: #6b7280; margin-top: 0.25rem;">{{ form.password2.help_text }}</small>
+			{% endif %}
+		</p>
 		<button type="submit" style="width:100%">Зарегистрироваться</button>
 	</form>
 	<p style="text-align:center;margin-top:1rem"><a href="/login/">У меня есть аккаунт</a></p>

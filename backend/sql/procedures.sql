@@ -1,5 +1,4 @@
--- PostgreSQL хранимые процедуры для книжного магазина
--- Бизнес-логика для расчета и обработки данных
+
 
 -- 1. Процедура: Расчет итоговой стоимости заказа
 CREATE OR REPLACE FUNCTION calculate_order_total(order_id_param INTEGER)

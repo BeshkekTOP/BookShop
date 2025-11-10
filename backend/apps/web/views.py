@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
+from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db import transaction
 from django.db.models import Q, Avg, Count
@@ -13,6 +14,48 @@ from backend.apps.users.models import Profile
 from backend.apps.core.decorators import guest_required, buyer_required, admin_required
 from django import forms
 from decimal import Decimal, InvalidOperation
+
+User = get_user_model()
+
+
+class CustomUserCreationForm(UserCreationForm):
+    """Форма регистрации с дополнительными полями: email, first_name, last_name"""
+    email = forms.EmailField(
+        required=True,
+        label='Email',
+        help_text='Введите ваш email адрес'
+    )
+    first_name = forms.CharField(
+        required=True,
+        max_length=150,
+        label='Имя',
+        help_text='Введите ваше имя'
+    )
+    last_name = forms.CharField(
+        required=True,
+        max_length=150,
+        label='Фамилия',
+        help_text='Введите вашу фамилию'
+    )
+
+    class Meta:
+        model = User
+        fields = ("username", "email", "first_name", "last_name", "password1", "password2")
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Пользователь с таким email уже существует.")
+        return email
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.email = self.cleaned_data["email"]
+        user.first_name = self.cleaned_data["first_name"]
+        user.last_name = self.cleaned_data["last_name"]
+        if commit:
+            user.save()
+        return user
 
 
 class ProfileForm(forms.ModelForm):
@@ -239,6 +282,17 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Логируем вход в систему
+            from backend.apps.core.models import AuditLog
+            AuditLog.objects.create(
+                action='login',
+                actor=user,
+                description=f'Пользователь {user.username} вошел в систему',
+                method='POST',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                path=request.path,
+                user_agent=request.META.get('HTTP_USER_AGENT', '')
+            )
             return redirect('catalog')
     else:
         form = AuthenticationForm(request)
@@ -249,22 +303,47 @@ def login_view(request):
 def register_view(request):
     """Регистрация доступна только гостям"""
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
+            # Создаем профиль для нового пользователя
+            Profile.objects.get_or_create(user=user)
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=user.username, password=raw_password)
             if user:
+                # Логируем регистрацию
+                from backend.apps.core.models import AuditLog
+                AuditLog.objects.create(
+                    action='registered',
+                    actor=user,
+                    description=f'Пользователь {user.username} ({user.email}) зарегистрировался в системе',
+                    method='POST',
+                    ip_address=request.META.get('REMOTE_ADDR'),
+                    path=request.path,
+                    user_agent=request.META.get('HTTP_USER_AGENT', '')
+                )
                 login(request, user)
                 messages.success(request, 'Добро пожаловать! Регистрация прошла успешно.')
                 return redirect('catalog')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'web/register.html', {"form": form})
 
 
 @login_required
 def logout_view(request):
+    user = request.user
+    # Логируем выход из системы
+    from backend.apps.core.models import AuditLog
+    AuditLog.objects.create(
+        action='logout',
+        actor=user,
+        description=f'Пользователь {user.username} вышел из системы',
+        method='GET',
+        ip_address=request.META.get('REMOTE_ADDR'),
+        path=request.path,
+        user_agent=request.META.get('HTTP_USER_AGENT', '')
+    )
     logout(request)
     return redirect('login')
 

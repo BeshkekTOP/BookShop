@@ -1,0 +1,108 @@
+{% extends 'web/base.html' %}
+{% block title %}Добавить пользователя{% endblock %}
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+	<h1>Добавить пользователя</h1>
+	
+	<div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+		<form method="post">
+			{% csrf_token %}
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Имя пользователя *</label>
+				{{ form.username }}
+				{% if form.username.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.username.errors }}
+					</div>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Email *</label>
+				{{ form.email }}
+				{% if form.email.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.email.errors }}
+					</div>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Имя</label>
+				{{ form.first_name }}
+				{% if form.first_name.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.first_name.errors }}
+					</div>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Фамилия</label>
+				{{ form.last_name }}
+				{% if form.last_name.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.last_name.errors }}
+					</div>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Пароль *</label>
+				{{ form.password1 }}
+				{% if form.password1.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.password1.errors }}
+					</div>
+				{% endif %}
+				{% if form.password1.help_text %}
+					<small style="color: #6b7280; font-size: 0.85em;">{{ form.password1.help_text }}</small>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 15px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Подтверждение пароля *</label>
+				{{ form.password2 }}
+				{% if form.password2.errors %}
+					<div style="color: #ef4444; font-size: 0.9em; margin-top: 5px;">
+						{{ form.password2.errors }}
+					</div>
+				{% endif %}
+				{% if form.password2.help_text %}
+					<small style="color: #6b7280; font-size: 0.85em;">{{ form.password2.help_text }}</small>
+				{% endif %}
+			</div>
+			
+			<div style="margin-bottom: 20px;">
+				<label style="display: block; margin-bottom: 5px; font-weight: 600;">Роль *</label>
+				<select name="role" required style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px;">
+					<option value="buyer" selected>Покупатель</option>
+					<option value="manager">Менеджер</option>
+					<option value="admin">Администратор</option>
+				</select>
+			</div>
+			
+			<div style="display: flex; gap: 10px;">
+				<button type="submit" style="background: #10b981; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1em; font-weight: 600; cursor: pointer;">
+					Создать пользователя
+				</button>
+				<a href="/admin/users/" style="background: #6b7280; color: white; padding: 12px 24px; border: none; border-radius: 6px; font-size: 1em; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block;">
+					Отмена
+				</a>
+			</div>
+		</form>
+	</div>
+</div>
+
+<style>
+input[type="text"], input[type="email"], input[type="password"] {
+	width: 100%;
+	padding: 10px;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	font-size: 1em;
+}
+</style>
+{% endblock %}
+

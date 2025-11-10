@@ -11,7 +11,7 @@
 					<th style="padding: 12px; text-align: left; font-weight: 600;">Дата/Время</th>
 					<th style="padding: 12px; text-align: left; font-weight: 600;">Действие</th>
 					<th style="padding: 12px; text-align: left; font-weight: 600;">Пользователь</th>
-					<th style="padding: 12px; text-align: left; font-weight: 600;">Изменение</th>
+					<th style="padding: 12px; text-align: left; font-weight: 600;">Описание</th>
 					<th style="padding: 12px; text-align: left; font-weight: 600;">IP</th>
 				</tr>
 			</thead>
@@ -28,6 +28,18 @@
 							<span style="color: #2563eb; font-weight: 600;">✏️ Обновлено</span>
 						{% elif log.action == 'deleted' %}
 							<span style="color: #ef4444; font-weight: 600;">🗑️ Удалено</span>
+						{% elif log.action == 'login' %}
+							<span style="color: #10b981; font-weight: 600;">🔐 Вход</span>
+						{% elif log.action == 'logout' %}
+							<span style="color: #f59e0b; font-weight: 600;">🚪 Выход</span>
+						{% elif log.action == 'registered' %}
+							<span style="color: #8b5cf6; font-weight: 600;">📝 Регистрация</span>
+						{% elif log.action == 'backup_created' %}
+							<span style="color: #10b981; font-weight: 600;">💾 Резервная копия создана</span>
+						{% elif log.action == 'backup_restored' %}
+							<span style="color: #2563eb; font-weight: 600;">🔄 Резервная копия восстановлена</span>
+						{% elif log.action == 'backup_deleted' %}
+							<span style="color: #ef4444; font-weight: 600;">🗑️ Резервная копия удалена</span>
 						{% else %}
 							<span style="color: #6b7280;">{{ log.get_action_display }}</span>
 						{% endif %}
@@ -40,7 +52,9 @@
 						{% endif %}
 					</td>
 					<td style="padding: 12px;">
-						{% if log.old_data and log.new_data %}
+						{% if log.description %}
+							{{ log.description }}
+						{% elif log.old_data and log.new_data %}
 							<details style="cursor: pointer;">
 								<summary style="color: #2563eb;">Подробности</summary>
 								<div style="margin-top: 8px; padding: 8px; background: #f9fafb; border-radius: 4px; font-size: 0.85em;">
@@ -68,6 +82,13 @@
 	</div>
 </div>
 {% endblock %}
+
+
+
+
+
+
+
 
 
 

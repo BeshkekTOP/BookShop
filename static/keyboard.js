@@ -1,6 +1,3 @@
-// Система горячих клавиш для книжного магазина
-// Реализует 8+ горячих клавиш для частых операций
-
 const KeyboardShortcuts = {
     shortcuts: [],
     
@@ -16,7 +13,6 @@ const KeyboardShortcuts = {
     // Инициализация системы
     init() {
         document.addEventListener('keydown', (e) => {
-            // Проверяем, не вводит ли пользователь текст
             const target = e.target;
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
                 return;
@@ -67,7 +63,6 @@ const KeyboardShortcuts = {
     
     // Показ справки по горячим клавишам
     showHelp() {
-        // Удаляем предыдущее модальное окно, если есть
         const existing = document.getElementById('keyboard-help');
         if (existing) existing.remove();
         
@@ -104,7 +99,6 @@ const KeyboardShortcuts = {
             // Определяем платформу пользователя
             const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
             
-            // Заменяем ключи для читаемости
             let keyDisplay = s.combo.replace(/\+/g, ' + ')
                 .replace('ctrl', isMac ? 'Cmd' : 'Ctrl')
                 .replace('alt', 'Alt')
@@ -131,7 +125,6 @@ const KeyboardShortcuts = {
     }
 };
 
-// Экспортируем глобально для доступа из base.html
 window.KeyboardShortcuts = KeyboardShortcuts;
 
 // Регистрация горячих клавиш

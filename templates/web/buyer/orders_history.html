@@ -2,7 +2,7 @@
 {% block title %}Мои заказы{% endblock %}
 {% block content %}
 <div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
-	<h1>📦 Мои заказы</h1>
+	<h1>Мои заказы</h1>
 	
 	{% if orders %}
 	<div style="margin-top: 20px;">
@@ -17,17 +17,17 @@
 				</div>
 				<div style="text-align: right;">
 					<p style="margin: 0; font-size: 1.2em; font-weight: 600; color: #2563eb;">
-						{{ order.total_amount }} ₽
+						{{ order.total_amount|floatformat:2 }} ₽
 					</p>
 					<p style="margin: 5px 0;">
 						{% if order.status == 'processing' %}
-							<span style="color: #f59e0b; font-weight: 600;">🔄 Обрабатывается</span>
+							<span style="color: #f59e0b; font-weight: 600;">Обрабатывается</span>
 						{% elif order.status == 'shipped' %}
-							<span style="color: #2563eb; font-weight: 600;">📦 Отправлен</span>
+							<span style="color: #2563eb; font-weight: 600;">Отправлен</span>
 						{% elif order.status == 'delivered' %}
-							<span style="color: #10b981; font-weight: 600;">✅ Доставлен</span>
+							<span style="color: #10b981; font-weight: 600;">Доставлен</span>
 						{% elif order.status == 'cancelled' %}
-							<span style="color: #ef4444; font-weight: 600;">❌ Отменен</span>
+							<span style="color: #ef4444; font-weight: 600;">Отменен</span>
 						{% endif %}
 					</p>
 				</div>
@@ -43,15 +43,24 @@
 				</p>
 			</div>
 			
-			<div style="text-align: right;">
+			<div style="text-align: right; display: flex; gap: 10px; justify-content: flex-end;">
 				<a href="/orders/{{ order.id }}/" class="btn small">Подробнее</a>
+				{% if order.status == 'processing' %}
+				<form method="post" action="{% url 'cancel-order' order.id %}" style="display: inline-block;" onsubmit="return confirm('Вы уверены, что хотите отменить этот заказ?');">
+					{% csrf_token %}
+					<button type="submit" style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 0.9em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+					        onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+						Отменить
+					</button>
+				</form>
+				{% endif %}
 			</div>
 		</div>
 		{% endfor %}
 	</div>
 	{% else %}
 	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 60px; text-align: center; margin-top: 20px;">
-		<p style="font-size: 3em; margin: 0;">📦</p>
+		<p style="font-size: 3em; margin: 0;"></p>
 		<h2 style="margin: 20px 0;">У вас пока нет заказов</h2>
 		<p style="color: #6b7280; margin-bottom: 30px;">Начните с просмотра каталога</p>
 		<a href="/catalog/" class="btn">Перейти в каталог</a>
@@ -59,6 +68,14 @@
 	{% endif %}
 </div>
 {% endblock %}
+
+
+
+
+
+
+
+
 
 
 

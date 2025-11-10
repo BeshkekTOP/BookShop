@@ -33,13 +33,10 @@
 				<label style="display: block; margin-bottom: 8px; font-weight: 600;">Оценка *:</label>
 				<div style="display: flex; gap: 8px; justify-content: center;">
 					{% for i in "12345" %}
-					<label style="cursor: pointer; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; flex: 1; transition: all 0.2s; background: #fff;" 
-					       onmouseover="this.style.borderColor='#3b82f6'; this.style.backgroundColor='#eff6ff';" 
-					       onmouseout="this.style.borderColor='#e5e7eb'; this.style.backgroundColor='#fff';">
+					<label class="star-label" data-rating="{{ forloop.counter }}" style="cursor: pointer; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; text-align: center; flex: 1; transition: all 0.2s; background: #fff;">
 						<input type="radio" name="rating" value="{{ forloop.counter }}" 
 						       {% if existing_review and existing_review.rating == forloop.counter %}checked{% endif %}
-						       required style="display: none;" 
-						       onchange="updateStarSelection(this)">
+						       required style="display: none;">
 						<div style="font-size: 1.8em; margin-bottom: 4px;">⭐</div>
 						<div style="font-size: 0.9em; font-weight: 600; color: #374151;">{{ forloop.counter }}</div>
 					</label>
@@ -77,17 +74,21 @@
 
 <script>
 function updateStarSelection(selectedValue) {
+    // Получаем числовое значение
+    const ratingValue = typeof selectedValue === 'object' ? parseInt(selectedValue.value) : parseInt(selectedValue);
+    
     // Сбрасываем все звезды
     const allLabels = document.querySelectorAll('label');
     allLabels.forEach(label => {
-        if (label.querySelector('input[name="rating"]')) {
+        const input = label.querySelector('input[name="rating"]');
+        if (input) {
             label.style.borderColor = '#e5e7eb';
             label.style.backgroundColor = '#fff';
         }
     });
     
-    // Подсвечиваем выбранную звезду и все предыдущие
-    for (let i = 1; i <= selectedValue; i++) {
+    // Подсвечиваем выбранную звезду и все предыдущие (включительно)
+    for (let i = 1; i <= ratingValue; i++) {
         const input = document.querySelector(`input[name="rating"][value="${i}"]`);
         if (input) {
             const label = input.parentElement;
@@ -116,6 +117,44 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateStarSelection(parseInt(checkedInput.value));
                 }
             }, 10);
+        });
+        
+        // Добавляем hover эффект для предварительного просмотра
+        label.addEventListener('mouseenter', function() {
+            const value = parseInt(input.value);
+            const checkedInput = document.querySelector('input[name="rating"]:checked');
+            const checkedValue = checkedInput ? parseInt(checkedInput.value) : 0;
+            
+            // Подсвечиваем при наведении все звезды до текущей включительно
+            for (let i = 1; i <= value; i++) {
+                const hoverInput = document.querySelector(`input[name="rating"][value="${i}"]`);
+                if (hoverInput) {
+                    const hoverLabel = hoverInput.parentElement;
+                    // Если звезда уже выбрана, не меняем её стиль
+                    if (i <= checkedValue) {
+                        hoverLabel.style.borderColor = '#10b981';
+                        hoverLabel.style.backgroundColor = '#ecfdf5';
+                    } else {
+                        hoverLabel.style.borderColor = '#3b82f6';
+                        hoverLabel.style.backgroundColor = '#eff6ff';
+                    }
+                }
+            }
+        });
+        
+        label.addEventListener('mouseleave', function() {
+            // Восстанавливаем состояние на основе выбранного значения
+            const checkedInput = document.querySelector('input[name="rating"]:checked');
+            if (checkedInput) {
+                updateStarSelection(parseInt(checkedInput.value));
+            } else {
+                // Сбрасываем все, если ничего не выбрано
+                const allLabels = document.querySelectorAll('.star-label');
+                allLabels.forEach(l => {
+                    l.style.borderColor = '#e5e7eb';
+                    l.style.backgroundColor = '#fff';
+                });
+            }
         });
     });
     

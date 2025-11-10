@@ -2,7 +2,7 @@
 {% block title %}Оформление заказа{% endblock %}
 {% block content %}
 <div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
-	<h1>📦 Оформление заказа</h1>
+	<h1>Оформление заказа</h1>
 	
 	<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
 		<!-- Форма доставки -->
@@ -14,7 +14,7 @@
 				
 				<!-- Информация о доставке -->
 				<div style="margin-bottom: 20px;">
-					<h3 style="margin: 0 0 15px 0; color: #374151;">📍 Информация о доставке</h3>
+					<h3 style="margin: 0 0 15px 0; color: #374151;">Информация о доставке</h3>
 					
 					<div style="margin-bottom: 15px;">
 						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Город *</label>
@@ -40,7 +40,7 @@
 				
 				<!-- Дополнительная информация -->
 				<div style="margin-bottom: 20px;">
-					<h3 style="margin: 0 0 15px 0; color: #374151;">📝 Дополнительная информация</h3>
+					<h3 style="margin: 0 0 15px 0; color: #374151;">Дополнительная информация</h3>
 					
 					<div style="margin-bottom: 15px;">
 						<label style="display: block; margin-bottom: 5px; font-weight: 600;">Примечания к заказу</label>
@@ -53,7 +53,7 @@
 				<div style="margin-top: 25px;">
 					<button type="submit" class="btn" style="width: 100%; font-size: 1.1em; padding: 15px; background: #10b981; border: none; color: white; border-radius: 8px; cursor: pointer; transition: background 0.2s;"
 					        onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
-						✅ Оформить заказ на {{ total }} ₽
+						Оформить заказ на {{ total }} ₽
 					</button>
 				</div>
 			</form>
@@ -63,17 +63,23 @@
 		<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; height: fit-content;">
 			<h2 style="margin: 0 0 15px 0;">Ваш заказ</h2>
 			
+			{% if items %}
 			{% for item_data in items %}
 			<div style="padding: 10px 0; border-bottom: 1px solid #e5e7eb;">
 				<p style="margin: 0; font-weight: 600;">{{ item_data.item.book.title }}</p>
 				<p style="margin: 5px 0; color: #6b7280; font-size: 0.9em;">
-					{{ item_data.item.quantity }} × {{ item_data.item.book.price }} ₽
+					{{ item_data.item.quantity }} шт. × {{ item_data.item.book.price }} ₽
 				</p>
-				<p style="margin: 5px 0 0 0; text-align: right; font-weight: 600;">
-					{{ item_data.total }} ₽
+				<p style="margin: 5px 0 0 0; text-align: right; font-weight: 600; color: #2563eb;">
+					{{ item_data.item_total|floatformat:2 }} ₽
 				</p>
 			</div>
+			{% empty %}
+			<p style="color: #6b7280; text-align: center; padding: 20px;">Корзина пуста</p>
 			{% endfor %}
+			{% else %}
+			<p style="color: #6b7280; text-align: center; padding: 20px;">Корзина пуста</p>
+			{% endif %}
 			
 			<div style="border-top: 2px solid #e5e7eb; margin-top: 15px; padding-top: 15px;">
 				<p style="margin: 0; font-size: 1.3em; font-weight: 600; color: #2563eb;">
@@ -102,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // Показываем индикатор загрузки только после валидации
-        submitBtn.innerHTML = '⏳ Обрабатываем заказ...';
+        submitBtn.innerHTML = 'Обрабатываем заказ...';
         submitBtn.disabled = true;
         
         // Восстанавливаем кнопку через 10 секунд на случай, если что-то пойдет не так

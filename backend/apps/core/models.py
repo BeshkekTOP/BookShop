@@ -11,6 +11,12 @@ class AuditLog(models.Model):
         ('updated', 'Обновлено'),
         ('deleted', 'Удалено'),
         ('viewed', 'Просмотрено'),
+        ('login', 'Вход в систему'),
+        ('logout', 'Выход из системы'),
+        ('registered', 'Регистрация'),
+        ('backup_created', 'Создана резервная копия'),
+        ('backup_restored', 'Восстановлена резервная копия'),
+        ('backup_deleted', 'Удалена резервная копия'),
     ]
     
     action = models.CharField(max_length=100, choices=ACTION_CHOICES)
@@ -18,6 +24,9 @@ class AuditLog(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.SET_NULL, null=True, blank=True)
     object_id = models.PositiveIntegerField(null=True, blank=True)
     content_object = GenericForeignKey('content_type', 'object_id')
+    
+    # Детальное описание действия
+    description = models.TextField(blank=True, help_text='Детальное описание действия пользователя')
     
     # Данные до изменения
     old_data = models.JSONField(null=True, blank=True)

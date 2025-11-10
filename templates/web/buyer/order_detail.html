@@ -2,7 +2,7 @@
 {% block title %}Заказ #{{ order.id }}{% endblock %}
 {% block content %}
 <div style="max-width: 900px; margin: 0 auto; padding: 20px;">
-	<h1>📦 Заказ #{{ order.id }}</h1>
+	<h1>Заказ #{{ order.id }}</h1>
 	
 	<!-- Информация о заказе -->
 	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
@@ -16,20 +16,20 @@
 				<td style="padding: 8px 0; color: #6b7280;">Статус:</td>
 				<td style="padding: 8px 0;">
 					{% if order.status == 'processing' %}
-						<span style="color: #f59e0b; font-weight: 600;">🔄 Обрабатывается</span>
+						<span style="color: #f59e0b; font-weight: 600;">Обрабатывается</span>
 					{% elif order.status == 'shipped' %}
-						<span style="color: #2563eb; font-weight: 600;">📦 Отправлен</span>
+						<span style="color: #2563eb; font-weight: 600;">Отправлен</span>
 					{% elif order.status == 'delivered' %}
-						<span style="color: #10b981; font-weight: 600;">✅ Доставлен</span>
+						<span style="color: #10b981; font-weight: 600;">Доставлен</span>
 					{% elif order.status == 'cancelled' %}
-						<span style="color: #ef4444; font-weight: 600;">❌ Отменен</span>
+						<span style="color: #ef4444; font-weight: 600;">Отменен</span>
 					{% endif %}
 				</td>
 			</tr>
 			<tr>
 				<td style="padding: 8px 0; color: #6b7280;">Сумма заказа:</td>
 				<td style="padding: 8px 0; font-size: 1.2em; font-weight: 600; color: #2563eb;">
-					{{ order.total_amount }} ₽
+					{{ order.total_amount|floatformat:2 }} ₽
 				</td>
 			</tr>
 			{% if order.notes %}
@@ -54,21 +54,33 @@
 				</tr>
 			</thead>
 			<tbody>
+				{% if items %}
 				{% for item in items %}
 				<tr style="border-top: 1px solid #e5e7eb;">
 					<td style="padding: 12px;">
 						<strong>{{ item.book.title }}</strong>
+						{% if item.book.isbn %}
 						<br><small style="color: #6b7280;">ISBN: {{ item.book.isbn }}</small>
+						{% endif %}
 					</td>
-					<td style="padding: 12px; text-align: center;">{{ item.price }} ₽</td>
-					<td style="padding: 12px; text-align: center;">{{ item.quantity }}</td>
-					<td style="padding: 12px; text-align: right; font-weight: 600;">{% widthratio item.price 1 item.quantity %} ₽</td>
+					<td style="padding: 12px; text-align: center;">{{ item.price|floatformat:2 }} ₽</td>
+					<td style="padding: 12px; text-align: center;">{{ item.quantity }} шт.</td>
+					<td style="padding: 12px; text-align: right; font-weight: 600; color: #2563eb;">
+						{% widthratio item.price 1 item.quantity %} ₽
+					</td>
 				</tr>
 				{% endfor %}
+				{% else %}
+				<tr>
+					<td colspan="4" style="padding: 20px; text-align: center; color: #6b7280;">
+						Товары в заказе не найдены
+					</td>
+				</tr>
+				{% endif %}
 				<tr style="border-top: 2px solid #e5e7eb;">
 					<td colspan="3" style="padding: 12px; text-align: right; font-weight: 600;">Итого:</td>
 					<td style="padding: 12px; text-align: right; font-size: 1.1em; font-weight: 600; color: #2563eb;">
-						{{ order.total_amount }} ₽
+						{{ order.total_amount|floatformat:2 }} ₽
 					</td>
 				</tr>
 			</tbody>
@@ -76,7 +88,7 @@
 	</div>
 	
 	<!-- Адрес доставки -->
-	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
 		<h2 style="margin: 0 0 15px 0;">Адрес доставки</h2>
 		<p style="margin: 0;"><strong>Город:</strong> {{ order.shipping_city }}</p>
 		<p style="margin: 5px 0;"><strong>Адрес:</strong> {{ order.shipping_address }}</p>
@@ -84,6 +96,20 @@
 		<p style="margin: 5px 0;"><strong>Индекс:</strong> {{ order.shipping_postal_code }}</p>
 		{% endif %}
 	</div>
+	
+	<!-- Действия с заказом -->
+	{% if order.status == 'processing' %}
+	<div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px;">
+		<h2 style="margin: 0 0 15px 0;">Действия с заказом</h2>
+		<form method="post" action="{% url 'cancel-order' order.id %}" style="display: inline-block;" onsubmit="return confirm('Вы уверены, что хотите отменить этот заказ?');">
+			{% csrf_token %}
+			<button type="submit" style="padding: 12px 24px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 1em; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+			        onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">
+				Отменить заказ
+			</button>
+		</form>
+	</div>
+	{% endif %}
 </div>
 {% endblock %}
 

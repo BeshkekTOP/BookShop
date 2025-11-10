@@ -66,6 +66,53 @@ def admin_dashboard(request):
 
 
 @admin_required
+@require_http_methods(["GET", "POST"])
+def admin_user_create(request):
+    """Создание нового пользователя администратором"""
+    if request.method == 'POST':
+        from django.contrib.auth.forms import UserCreationForm
+        from backend.apps.web.views import CustomUserCreationForm
+        
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Создаем профиль для нового пользователя
+            profile, _ = Profile.objects.get_or_create(user=user)
+            # Устанавливаем роль из формы
+            role = request.POST.get('role', 'buyer')
+            profile.role = role
+            profile.save()
+            
+            # Логируем создание пользователя
+            from django.contrib.contenttypes.models import ContentType
+            user_content_type = ContentType.objects.get_for_model(User)
+            AuditLog.objects.create(
+                action='created',
+                actor=request.user,
+                content_type=user_content_type,
+                object_id=user.id,
+                description=f'Администратор {request.user.username} создал пользователя {user.username} ({user.email}) с ролью {role}',
+                method='POST',
+                ip_address=request.META.get('REMOTE_ADDR'),
+                path=request.path,
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                new_data={
+                    'username': user.username,
+                    'email': user.email,
+                    'role': role
+                }
+            )
+            
+            messages.success(request, f'Пользователь {user.username} успешно создан')
+            return redirect('admin-user-detail', user_id=user.id)
+    else:
+        from backend.apps.web.views import CustomUserCreationForm
+        form = CustomUserCreationForm()
+    
+    return render(request, 'web/admin/user_create.html', {'form': form})
+
+
+@admin_required
 def admin_users_list(request):
     """Список пользователей для управления"""
     search = request.GET.get('search', '')
@@ -86,10 +133,6 @@ def admin_users_list(request):
     if role_filter:
         users = users.filter(profile__role=role_filter)
     
-    if status_filter == 'blocked':
-        users = users.filter(profile__is_blocked=True)
-    elif status_filter == 'active':
-        users = users.filter(profile__is_blocked=False)
     
     users = users.order_by('-date_joined')
     
@@ -131,60 +174,6 @@ def admin_user_detail(request, user_id):
     }
     
     return render(request, 'web/admin/user_detail.html', context)
-
-
-@admin_required
-@require_http_methods(["POST"])
-def admin_user_block(request, user_id):
-    """Блокировка/разблокировка пользователя"""
-    user = get_object_or_404(User, id=user_id)
-    
-    if user == request.user:
-        messages.error(request, 'Нельзя заблокировать самого себя')
-        return redirect('admin-user-detail', user_id=user_id)
-    
-    profile, _ = Profile.objects.get_or_create(user=user)
-    
-    if request.POST.get('action') == 'block':
-        reason = request.POST.get('reason', '')
-        profile.is_blocked = True
-        profile.blocked_reason = reason
-        profile.save()
-        
-        # Логируем действие
-        AuditLog.objects.create(
-            action='updated',
-            actor=request.user,
-            object_id=user.id,
-            old_data={'is_blocked': False},
-            new_data={'is_blocked': True, 'reason': reason},
-            method='POST',
-            ip_address=request.META.get('REMOTE_ADDR'),
-            path=request.path
-        )
-        
-        messages.success(request, f'Пользователь {user.username} заблокирован')
-    
-    elif request.POST.get('action') == 'unblock':
-        profile.is_blocked = False
-        profile.blocked_reason = ''
-        profile.save()
-        
-        # Логируем действие
-        AuditLog.objects.create(
-            action='updated',
-            actor=request.user,
-            object_id=user.id,
-            old_data={'is_blocked': True},
-            new_data={'is_blocked': False},
-            method='POST',
-            ip_address=request.META.get('REMOTE_ADDR'),
-            path=request.path
-        )
-        
-        messages.success(request, f'Пользователь {user.username} разблокирован')
-    
-    return redirect('admin-user-detail', user_id=user_id)
 
 
 @admin_required

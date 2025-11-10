@@ -62,3 +62,11 @@ class PurchaseEventSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+
+
+
+
+

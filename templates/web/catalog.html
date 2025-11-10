@@ -46,6 +46,14 @@
 <div class="grid">
 	{% for b in books %}
 	<article class="card">
+		{% if b.cover_image %}
+		<div style="margin-bottom: 1rem; text-align: center;">
+			<a href="/books/{{ b.id }}/">
+				<img src="{{ b.cover_image.url }}" alt="{{ b.title }}" 
+				     style="max-width: 100%; height: 200px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+			</a>
+		</div>
+		{% endif %}
 		<header>
 			<a href="/books/{{ b.id }}/"><strong>{{ b.title }}</strong></a>
 		</header>

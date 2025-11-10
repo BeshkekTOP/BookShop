@@ -42,27 +42,27 @@
 		</div>
 	</div>
 	
-	<!-- График динамики продаж -->
+	<!-- Динамика заказов по сумме за последние 30 дней -->
 	<div class="card" style="margin-bottom: 30px;">
-		<h2 style="margin: 0 0 20px 0;">📈 Динамика продаж по дням</h2>
-		{% if daily_stats %}
+		<h2 style="margin: 0 0 20px 0;">💰 Динамика заказов по сумме (последние 30 дней)</h2>
+		{% if orders_by_sum_30 %}
 		<div style="height: 400px;">
-			<canvas id="dailyStatsChart"></canvas>
+			<canvas id="ordersBySumChart"></canvas>
 		</div>
 		{% else %}
-		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за выбранный период</p>
+		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за последние 30 дней</p>
 		{% endif %}
 	</div>
 	
-	<!-- Круговая диаграмма по статусам -->
+	<!-- Динамика заказов по количеству за последние 30 дней -->
 	<div class="card" style="margin-bottom: 30px;">
-		<h2 style="margin: 0 0 20px 0;">🍰 Распределение заказов по статусам</h2>
-		{% if status_stats %}
-		<div style="max-width: 400px; height: 400px; margin: 0 auto;">
-			<canvas id="statusChart"></canvas>
+		<h2 style="margin: 0 0 20px 0;">📊 Динамика заказов по количеству (последние 30 дней)</h2>
+		{% if orders_by_count_30 %}
+		<div style="height: 400px;">
+			<canvas id="ordersByCountChart"></canvas>
 		</div>
 		{% else %}
-		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за выбранный период</p>
+		<p style="color: var(--muted); text-align: center; padding: 20px;">Нет данных за последние 30 дней</p>
 		{% endif %}
 	</div>
 	
@@ -117,130 +117,121 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 	console.log('Chart.js loaded:', typeof Chart !== 'undefined');
-	{% if daily_stats %}
-	console.log('Daily stats count:', {{ daily_stats|length }});
-	// График динамики продаж
-	const dailyCtx = document.getElementById('dailyStatsChart').getContext('2d');
-	const dailyData = {
-		labels: [
-			{% for stat in daily_stats %}
-			'{{ stat.day|date:"M d" }}'{% if not forloop.last %},{% endif %}
-			{% endfor %}
-		],
-		datasets: [{
-			label: 'Заказы',
-			data: [
-				{% for stat in daily_stats %}
-				{{ stat.orders|default:0 }}{% if not forloop.last %},{% endif %}
-				{% endfor %}
-			],
-			borderColor: 'rgb(37, 99, 235)',
-			backgroundColor: 'rgba(37, 99, 235, 0.1)',
-			tension: 0.4,
-			fill: true
-		}, {
-			label: 'Выручка (₽)',
-			data: [
-				{% for stat in daily_stats %}
-				{% if stat.revenue %}{{ stat.revenue|floatformat:0 }}{% else %}0{% endif %}{% if not forloop.last %},{% endif %}
-				{% endfor %}
-			],
-			borderColor: 'rgb(16, 185, 129)',
-			backgroundColor: 'rgba(16, 185, 129, 0.1)',
-			tension: 0.4,
-			fill: true,
-			yAxisID: 'y1'
-		}]
-	};
 	
-	new Chart(dailyCtx, {
-		type: 'line',
-		data: dailyData,
-		options: {
-			responsive: true,
-			maintainAspectRatio: true,
-			plugins: {
-				legend: {
-					display: true,
-					position: 'top'
-				}
-			},
-			scales: {
-				y: {
-					beginAtZero: true,
-					title: {
+	{% if orders_by_sum_30 %}
+	// Динамика заказов по сумме за последние 30 дней
+	const ordersBySumCtx = document.getElementById('ordersBySumChart');
+	if (ordersBySumCtx && typeof Chart !== 'undefined') {
+		const ordersBySumData = {
+			labels: [
+				{% for stat in orders_by_sum_30 %}
+				'{{ stat.day|date:"d.m" }}'{% if not forloop.last %},{% endif %}
+				{% endfor %}
+			],
+			datasets: [{
+				label: 'Сумма заказов (₽)',
+				data: [
+					{% for stat in orders_by_sum_30 %}
+					{% if stat.total_sum %}{{ stat.total_sum|floatformat:0 }}{% else %}0{% endif %}{% if not forloop.last %},{% endif %}
+					{% endfor %}
+				],
+				borderColor: 'rgb(16, 185, 129)',
+				backgroundColor: 'rgba(16, 185, 129, 0.1)',
+				tension: 0.4,
+				fill: true,
+				pointRadius: 4,
+				pointHoverRadius: 6
+			}]
+		};
+		
+		new Chart(ordersBySumCtx.getContext('2d'), {
+			type: 'line',
+			data: ordersBySumData,
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				plugins: {
+					legend: {
 						display: true,
-						text: 'Количество заказов'
+						position: 'top'
 					}
 				},
-				y1: {
-					beginAtZero: true,
-					position: 'right',
-					title: {
-						display: true,
-						text: 'Выручка (₽)'
+				scales: {
+					y: {
+						beginAtZero: true,
+						title: {
+							display: true,
+							text: 'Сумма заказов (₽)'
+						}
 					},
-					grid: {
-						drawOnChartArea: false
+					x: {
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45
+						}
 					}
 				}
 			}
-		}
-	});
+		});
+	}
 	{% endif %}
 	
-	{% if status_stats %}
-	console.log('Status stats count:', {{ status_stats|length }});
-	// Круговая диаграмма по статусам
-	const statusCtx = document.getElementById('statusChart').getContext('2d');
-	const statusData = {
-		labels: [
-			{% for stat in status_stats %}
-			{% if stat.status == 'new' %}Новый
-			{% elif stat.status == 'processing' %}В обработке
-			{% elif stat.status == 'shipped' %}Отправлен
-			{% elif stat.status == 'delivered' %}Доставлен
-			{% elif stat.status == 'cancelled' %}Отменен
-			{% else %}{{ stat.status }}{% endif %}{% if not forloop.last %},{% endif %}
-			{% endfor %}
-		],
-		datasets: [{
-			data: [
-				{% for stat in status_stats %}
-				{{ stat.count }}{% if not forloop.last %},{% endif %}
+	{% if orders_by_count_30 %}
+	// Динамика заказов по количеству за последние 30 дней (столбчатая диаграмма)
+	const ordersByCountCtx = document.getElementById('ordersByCountChart');
+	if (ordersByCountCtx && typeof Chart !== 'undefined') {
+		const ordersByCountData = {
+			labels: [
+				{% for stat in orders_by_count_30 %}
+				'{{ stat.day|date:"d.m" }}'{% if not forloop.last %},{% endif %}
 				{% endfor %}
 			],
-			backgroundColor: [
-				'rgba(254, 243, 199, 0.8)',
-				'rgba(224, 231, 255, 0.8)',
-				'rgba(219, 234, 254, 0.8)',
-				'rgba(220, 252, 231, 0.8)',
-				'rgba(254, 226, 226, 0.8)'
-			],
-			borderColor: [
-				'rgb(146, 64, 14)',
-				'rgb(55, 48, 163)',
-				'rgb(30, 64, 175)',
-				'rgb(22, 101, 52)',
-				'rgb(153, 27, 27)'
-			],
-			borderWidth: 2
-		}]
-	};
-	
-	new Chart(statusCtx, {
-		type: 'doughnut',
-		data: statusData,
-		options: {
-			responsive: true,
-			maintainAspectRatio: true,
-			plugins: {
-				legend: {
-					position: 'bottom'
+			datasets: [{
+				label: 'Количество заказов',
+				data: [
+					{% for stat in orders_by_count_30 %}
+					{{ stat.orders_count|default:0 }}{% if not forloop.last %},{% endif %}
+					{% endfor %}
+				],
+				borderColor: 'rgb(37, 99, 235)',
+				backgroundColor: 'rgba(37, 99, 235, 0.6)',
+				borderWidth: 1
+			}]
+		};
+		
+		new Chart(ordersByCountCtx.getContext('2d'), {
+			type: 'bar',
+			data: ordersByCountData,
+			options: {
+				responsive: true,
+				maintainAspectRatio: true,
+				plugins: {
+					legend: {
+						display: true,
+						position: 'top'
+					}
+				},
+				scales: {
+					y: {
+						beginAtZero: true,
+						title: {
+							display: true,
+							text: 'Количество заказов'
+						},
+						ticks: {
+							stepSize: 1
+						}
+					},
+					x: {
+						ticks: {
+							maxRotation: 45,
+							minRotation: 45
+						}
+					}
 				}
 			}
-		}
-	});
+		});
+	}
 	{% endif %}
 });
 </script>

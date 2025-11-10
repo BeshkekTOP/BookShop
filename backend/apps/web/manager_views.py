@@ -218,12 +218,10 @@ def manager_statistics(request):
     else:
         start_date = datetime.now().date() - timedelta(days=7)
     
-    # Общая статистика за период
+    # Общая статистика за период (все заказы, не только доставленные)
     orders_stats = Order.objects.filter(created_at__date__gte=start_date)
     total_orders = orders_stats.count()
-    total_revenue = orders_stats.filter(
-        status__in=['delivered', 'shipped']
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
+    total_revenue = orders_stats.aggregate(total=Sum('total_amount'))['total'] or 0
     
     # Средний чек
     if total_orders > 0:
@@ -252,6 +250,48 @@ def manager_statistics(request):
         revenue=Sum('total_amount')
     ).order_by('day')
     
+    # Статистика за последние 30 дней для диаграмм (динамика по сумме и количеству)
+    from django.db.models.functions import TruncDate
+    from collections import defaultdict
+    
+    last_30_days = datetime.now().date() - timedelta(days=30)
+    orders_30_days = Order.objects.filter(created_at__date__gte=last_30_days)
+    
+    # Получаем данные по дням с заказами
+    orders_by_sum_dict = defaultdict(lambda: 0)
+    orders_by_count_dict = defaultdict(lambda: 0)
+    
+    for order in orders_30_days:
+        day = order.created_at.date()
+        orders_by_sum_dict[day] += float(order.total_amount)
+        orders_by_count_dict[day] += 1
+    
+    # Создаем список всех дней за последние 30 дней
+    all_days = []
+    current_date = last_30_days
+    today = datetime.now().date()
+    
+    while current_date <= today:
+        all_days.append(current_date)
+        current_date += timedelta(days=1)
+    
+    # Формируем данные для диаграмм со всеми днями
+    orders_by_sum_30 = [
+        {
+            'day': day,
+            'total_sum': orders_by_sum_dict.get(day, 0)
+        }
+        for day in all_days
+    ]
+    
+    orders_by_count_30 = [
+        {
+            'day': day,
+            'orders_count': orders_by_count_dict.get(day, 0)
+        }
+        for day in all_days
+    ]
+    
     context = {
         'period': period,
         'start_date': start_date,
@@ -261,6 +301,8 @@ def manager_statistics(request):
         'status_stats': status_stats,
         'top_books': top_books,
         'daily_stats': daily_stats,
+        'orders_by_sum_30': orders_by_sum_30,
+        'orders_by_count_30': orders_by_count_30,
     }
     
     return render(request, 'web/manager/statistics.html', context)

@@ -2,9 +2,11 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_http_methods
-from backend.apps.core.decorators import buyer_required
+from django.db.models import Q
+from backend.apps.core.decorators import buyer_required, admin_required
 from backend.apps.catalog.models import Book
 from backend.apps.reviews.models import Review
+from backend.apps.core.models import AuditLog
 
 
 @buyer_required
@@ -123,8 +125,9 @@ def checkout_detailed(request):
             user=request.user,
             status="processing",
             total_amount=Decimal("0"),
-            shipping_address=request.POST.get('address', profile.address or ''),
-            shipping_city=request.POST.get('city', profile.city or ''),
+            shipping_address=request.POST.get('shipping_address', profile.address or ''),
+            shipping_city=request.POST.get('shipping_city', profile.city or ''),
+            shipping_postal_code=request.POST.get('shipping_postal_code', profile.postal_code or ''),
             notes=request.POST.get('notes', '')
         )
         
@@ -140,17 +143,48 @@ def checkout_detailed(request):
         order.total_amount = total
         order.save()
         
+        # Логируем создание заказа
+        from backend.apps.core.models import AuditLog
+        from django.contrib.contenttypes.models import ContentType
+        order_content_type = ContentType.objects.get_for_model(Order)
+        AuditLog.objects.create(
+            action='created',
+            actor=request.user,
+            content_type=order_content_type,
+            object_id=order.id,
+            description=f'Пользователь {request.user.username} создал заказ #{order.id} на сумму {order.total_amount} ₽',
+            method='POST',
+            ip_address=request.META.get('REMOTE_ADDR'),
+            path=request.path,
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            new_data={
+                'order_id': order.id,
+                'total_amount': str(order.total_amount),
+                'status': order.status,
+                'items_count': cart.items.count()
+            }
+        )
+        
         # Очистка корзины
         cart.items.all().delete()
         return redirect('checkout-success', order_id=order.id)
     
     # GET - показываем форму
     items = cart.items.select_related('book').all()
-    total = sum((it.book.price * it.quantity for it in items), start=Decimal('0'))
+    # Вычисляем сумму для каждого товара и общую сумму
+    items_with_totals = []
+    total = Decimal('0')
+    for item in items:
+        item_total = item.book.price * item.quantity
+        items_with_totals.append({
+            'item': item,
+            'item_total': item_total
+        })
+        total += item_total
     
     return render(request, 'web/buyer/checkout_detailed.html', {
         'cart': cart,
-        'items': items,
+        'items': items_with_totals,
         'total': total,
         'profile': profile
     })
@@ -169,4 +203,67 @@ def order_detail(request, order_id):
     """Детали заказа покупателя"""
     from backend.apps.orders.models import Order
     order = get_object_or_404(Order, id=order_id, user=request.user)
-    return render(request, 'web/buyer/order_detail.html', {'order': order})
+    order_items = order.items.select_related('book').all()
+    return render(request, 'web/buyer/order_detail.html', {
+        'order': order,
+        'items': order_items
+    })
+
+
+@buyer_required
+@require_http_methods(["POST"])
+def cancel_order(request, order_id):
+    """Отмена заказа покупателем (только если статус processing)"""
+    from backend.apps.orders.models import Order
+    from backend.apps.catalog.models import Inventory
+    from backend.apps.core.models import AuditLog
+    from django.contrib.contenttypes.models import ContentType
+    
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    
+    # Проверяем, что заказ можно отменить (только если статус processing)
+    if order.status != 'processing':
+        messages.error(request, 'Заказ можно отменить только пока он обрабатывается')
+        return redirect('order-detail', order_id=order.id)
+    
+    # Возвращаем товары на склад
+    for item in order.items.select_related('book').all():
+        inventory, _ = Inventory.objects.get_or_create(book=item.book)
+        inventory.stock += item.quantity
+        inventory.save()
+    
+    # Меняем статус заказа на cancelled
+    order.status = 'cancelled'
+    order.save()
+    
+    # Логируем отмену заказа
+    from backend.apps.orders.models import Order as OrderModel
+    order_content_type = ContentType.objects.get_for_model(OrderModel)
+    AuditLog.objects.create(
+        action='updated',
+        actor=request.user,
+        content_type=order_content_type,
+        object_id=order.id,
+        description=f'Пользователь {request.user.username} отменил заказ #{order.id}',
+        method='POST',
+        ip_address=request.META.get('REMOTE_ADDR'),
+        path=request.path,
+        user_agent=request.META.get('HTTP_USER_AGENT', ''),
+        old_data={'status': 'processing'},
+        new_data={'status': 'cancelled'}
+    )
+    
+    messages.success(request, f'Заказ #{order.id} успешно отменен')
+    return redirect('order-detail', order_id=order.id)
+
+
+@admin_required
+def user_activity_logs(request):
+    """Логи активности - доступны только администраторам"""
+    # Получаем все логи активности
+    logs = AuditLog.objects.all().select_related('actor', 'content_type').order_by('-created_at')[:100]
+    
+    context = {
+        'logs': logs,
+    }
+    return render(request, 'web/buyer/activity_logs.html', context)

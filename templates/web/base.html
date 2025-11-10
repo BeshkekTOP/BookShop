@@ -31,8 +31,12 @@
 							<li><a href="/admin/categories/">📂 Категории</a></li>
 							<li><a href="/admin/inventory/">📦 Остатки</a></li>
 							<li><hr style="margin: 5px 0;"></li>
+							<li><a href="/manager/orders/">📋 Заказы</a></li>
+							<li><a href="/manager/statistics/">📈 Статистика</a></li>
+							<li><hr style="margin: 5px 0;"></li>
 							<li><a href="/admin/reports/">📈 Отчеты</a></li>
 							<li><a href="/admin/logs/">📝 Логи</a></li>
+							<li><a href="/admin/backups/">💾 Резервные копии</a></li>
 						</ul>
 					</li>
 					{% elif request.user.profile.role == 'manager' %}
@@ -65,7 +69,10 @@
 	</header>
 	<main class="container main">
 		{% for message in messages %}
-		<div class="alert">{{ message }}</div>
+		<div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}" id="alert-{{ forloop.counter }}">
+			<span>{{ message }}</span>
+			<button type="button" class="alert-close" onclick="this.parentElement.style.display='none'" aria-label="Закрыть">×</button>
+		</div>
 		{% endfor %}
 		{% block content %}{% endblock %}
 	</main>
