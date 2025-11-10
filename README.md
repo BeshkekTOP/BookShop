@@ -2,62 +2,6 @@
 
 Полнофункциональная система управления книжным магазином с ролевой моделью доступа, аналитикой, импорт/экспортом данных и расширенной документацией.
 
-## 🚀 Быстрый старт
-
-### Docker (рекомендуется)
-
-```bash
-# 1. Клонируйте репозиторий
-git clone <repository-url>
-cd BookShop
-
-# 2. Запустите контейнеры
-docker-compose up -d --build
-
-# 3. Примените миграции и создайте суперпользователя
-docker-compose exec web python manage.py migrate
-docker-compose exec web python manage.py createsuperuser
-
-# 4. Примените SQL скрипты (VIEW, процедуры, триггеры)
-docker-compose exec db bash scripts/deploy_sql.sh
-
-# 5. Соберите статические файлы
-docker-compose exec web python manage.py collectstatic --noinput
-
-# 6. Откройте в браузере
-# http://localhost - Веб-интерфейс
-# http://localhost:8000 - Django напрямую
-# http://localhost:8000/api/docs/ - API документация
-# http://localhost:8000/admin/ - Админ-панель
-```
-
-### Локальная установка (без Docker)
-
-```bash
-# 1. Установите зависимости
-pip install -r requirements.txt
-
-# 2. Настройте PostgreSQL и создайте базу данных
-createdb bookstore
-
-# 3. Настройте переменные окружения
-cp .env.example .env
-# Отредактируйте .env
-
-# 4. Примените миграции
-python manage.py migrate
-
-# 5. Создайте суперпользователя
-python manage.py createsuperuser
-
-# 6. Примените SQL скрипты
-psql -d bookstore -f backend/sql/views.sql
-psql -d bookstore -f backend/sql/procedures.sql
-psql -d bookstore -f backend/sql/triggers.sql
-
-# 7. Запустите сервер
-python manage.py runserver
-```
 
 ## 📋 Возможности системы
 
